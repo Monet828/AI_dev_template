@@ -44,6 +44,26 @@ cd AI_dev_templat
 
 ### 2. 新規プロジェクトを切る
 
+おすすめの入口:
+
+```bash
+./scripts/setup/new-project.sh /path/to/new-project full
+```
+
+profile を使わず最小構成で切る:
+
+```bash
+./scripts/setup/new-project.sh /path/to/new-project
+```
+
+profile ではなく pack を明示したい場合:
+
+```bash
+./scripts/setup/new-project.sh /path/to/new-project --packs understand-first,evidence-first,problem-first
+```
+
+低レベルの直接コマンド:
+
 pack なしの最小構成:
 
 ```bash
@@ -131,31 +151,32 @@ cd /path/to/new-project
 既存コードベースを安全に触る:
 
 ```bash
-./scripts/setup/scaffold.sh /path/to/new-project --with understand-first
+./scripts/setup/new-project.sh /path/to/new-project understand
 ```
 
 調査から問題設定までやる:
 
 ```bash
-./scripts/setup/scaffold.sh /path/to/new-project --with evidence-first,problem-first
+./scripts/setup/new-project.sh /path/to/new-project strategy
 ```
 
 既存コードを理解しつつ、根拠を集めて問題設定する:
 
 ```bash
-./scripts/setup/scaffold.sh /path/to/new-project --with understand-first,evidence-first,problem-first
+./scripts/setup/new-project.sh /path/to/new-project full
 ```
 
 資料作成も含める:
 
 ```bash
-./scripts/setup/scaffold.sh /path/to/new-project --with understand-first,evidence-first,problem-first,slides
+./scripts/setup/new-project.sh /path/to/new-project full-slides
 ```
 
 ## 標準コマンド
 
 - `./install.sh`
 - `./run.sh`
+- `./scripts/setup/new-project.sh`
 - `./scripts/setup/scaffold.sh`
 - `./scripts/setup/doctor.sh`
 - `./scripts/setup/bootstrap.sh`

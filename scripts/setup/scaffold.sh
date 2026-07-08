@@ -66,6 +66,7 @@ copy_base_template() {
     entries+=("$entry")
   done < <(find "$source_dir" -mindepth 1 -maxdepth 1 \
     ! -name '.DS_Store' \
+    ! -name '.git' \
     ! -name 'memory' \
     ! -name 'packs' \
     -print | sort)
