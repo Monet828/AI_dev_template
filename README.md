@@ -38,7 +38,7 @@ Claude Code と Codex の両方で使うことを前提にしています。
 ### 1. テンプレートを取得する
 
 ```bash
-git clone https://github.com/Monet828/AI_dev_templat.git
+git clone https://github.com/Monet828/AI_dev_template.git
 cd AI_dev_templat
 ```
 
