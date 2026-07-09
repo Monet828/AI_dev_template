@@ -10,6 +10,7 @@ required_paths=(
   "memory/decisions.md"
   "memory/tasks.md"
   "memory/sessions"
+  "skills"
   "assets/patterns"
   "scripts/setup/bootstrap.sh"
   "scripts/setup/doctor.sh"

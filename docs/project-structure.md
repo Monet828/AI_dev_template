@@ -77,6 +77,18 @@ Web アプリや BFF/API サービスの第一候補。
 
 AIエージェントと開発者の共有作業記憶を置く。
 
+### `skills/`
+
+再利用可能な AI skill を置く。  
+調査、設計、プロトタイプ化、特定ドメイン作業などをモジュール化するための置き場。
+
+主な対象:
+
+- `SKILL.md`
+- `references/`
+- `assets/`
+- skill ごとのテンプレや補助資料
+
 ### `supabase/`
 
 DB を持つプロジェクトで使う任意ディレクトリ。
@@ -98,6 +110,7 @@ bootstrap、doctor、hooks、loop 補助を置く。
 - 共有ロジックは `src/`
 - 本体の検証は `tests/`
 - 再利用資産は `assets/`
+- 再利用可能な能力は `skills/`
 - DB スキーマ運用は `supabase/`
 - セッション記録や短期記憶は `memory/`
 

@@ -10,6 +10,7 @@ required_dirs=(
   "assets/patterns"
   "docs/adr"
   "memory/sessions"
+  "skills"
   "scripts/hooks"
   "scripts/loop"
   "scripts/setup"

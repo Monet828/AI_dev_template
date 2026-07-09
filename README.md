@@ -30,6 +30,8 @@ Claude Code と Codex の両方で使うことを前提にしています。
   - opt-in の追加機能
 - `assets/`
   - 再利用する非コード資産
+- `skills/`
+  - 再利用可能な skill 本体。調査、設計、プロトタイプ化などの能力をモジュール化する
 
 ディレクトリ構成の詳細は `docs/project-structure.md` を参照してください。
 
@@ -206,6 +208,7 @@ project/
 ├── supabase/             # migrations / seed / functions
 ├── memory/               # 作業記憶
 ├── assets/               # 非コード資産
+├── skills/               # 再利用可能な skill 本体
 └── packs/                # opt-in 機能
 ```
 
