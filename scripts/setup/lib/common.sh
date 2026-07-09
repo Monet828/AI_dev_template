@@ -3,25 +3,43 @@
 required_paths=(
   "AGENTS.md"
   "CLAUDE.md"
+  "app"
+  "app/README.md"
+  "docs/adr"
   "memory/current-state.md"
   "memory/decisions.md"
   "memory/tasks.md"
-  "src"
-  "tests"
-  "docs/adr"
   "memory/sessions"
   "assets/patterns"
   "scripts/setup/bootstrap.sh"
   "scripts/setup/doctor.sh"
   "scripts/hooks/save-memory.sh"
+  "src"
+  "supabase"
+  "supabase/README.md"
+  "supabase/migrations"
+  "supabase/seed"
+  "tests"
 )
 
-project_markers=(
+root_project_markers=(
   "package.json"
   "pyproject.toml"
   "Cargo.toml"
   "go.mod"
   "Gemfile"
+)
+
+app_project_markers=(
+  "app/package.json"
+  "app/pyproject.toml"
+  "app/Cargo.toml"
+  "app/go.mod"
+  "app/Gemfile"
+  "app/requirements.txt"
+  "app/next.config.ts"
+  "app/next.config.js"
+  "app/vercel.json"
 )
 
 print_required_paths() {
@@ -35,10 +53,10 @@ print_required_paths() {
   done
 }
 
-print_project_markers() {
+print_root_project_markers() {
   local root_dir="$1"
   local found=false
-  for marker in "${project_markers[@]}"; do
+  for marker in "${root_project_markers[@]}"; do
     if [[ -f "$root_dir/$marker" ]]; then
       echo "[detected] $marker"
       found=true
@@ -46,5 +64,19 @@ print_project_markers() {
   done
   if [[ "$found" == false ]]; then
     echo "[info] no common root project manifest detected"
+  fi
+}
+
+print_app_project_markers() {
+  local root_dir="$1"
+  local found=false
+  for marker in "${app_project_markers[@]}"; do
+    if [[ -f "$root_dir/$marker" ]]; then
+      echo "[detected] $marker"
+      found=true
+    fi
+  done
+  if [[ "$found" == false ]]; then
+    echo "[info] no common app manifest detected under app/"
   fi
 }

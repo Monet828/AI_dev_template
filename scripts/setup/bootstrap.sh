@@ -23,7 +23,7 @@ echo
 print_required_paths "$ROOT_DIR"
 
 if [[ ! -f "$session_file" ]]; then
-  cat > "$session_file" <<EOF
+  cat > "$session_file" <<EOF2
 # Session Log - $today
 
 ## Goal
@@ -70,7 +70,7 @@ if [[ ! -f "$session_file" ]]; then
 - next_state:
 - required_context:
 - blocking_reason:
-EOF
+EOF2
   echo "[created] memory/sessions/$today.md"
 else
   echo "[ok] memory/sessions/$today.md"
@@ -89,7 +89,21 @@ sed -n '1,80p' "$ROOT_DIR/memory/current-state.md" || true
 
 if [[ -f "$ROOT_DIR/docs/project-structure.md" ]]; then
   print_section "Structure Guide"
-  sed -n '1,80p' "$ROOT_DIR/docs/project-structure.md" || true
+  sed -n '1,120p' "$ROOT_DIR/docs/project-structure.md" || true
+fi
+
+print_section "App Workspace"
+echo "app/ is the primary deployable workspace."
+print_app_project_markers "$ROOT_DIR"
+if [[ -f "$ROOT_DIR/app/README.md" ]]; then
+  sed -n '1,80p' "$ROOT_DIR/app/README.md" || true
+fi
+
+print_section "Supabase Workspace"
+if [[ -f "$ROOT_DIR/supabase/README.md" ]]; then
+  sed -n '1,80p' "$ROOT_DIR/supabase/README.md" || true
+else
+  echo "[info] no supabase workspace guide"
 fi
 
 print_section "Autonomy Reminder"
@@ -98,8 +112,8 @@ echo "Within that boundary, proceed without asking for every small step."
 echo "Keep Loop State current, and leave Resume From when stopping or blocking."
 echo "Do not leave unresolved questions only in chat context; record them in the session file."
 
-print_section "Project Type"
-print_project_markers "$ROOT_DIR"
+print_section "Root Project Type"
+print_root_project_markers "$ROOT_DIR"
 
 print_section "Session File"
 echo "$session_file"

@@ -23,20 +23,35 @@ check_file() {
 print_required_paths "$ROOT_DIR"
 
 echo
-echo "== Project Manifests =="
-print_project_markers "$ROOT_DIR"
+echo "== Root Manifests =="
+print_root_project_markers "$ROOT_DIR"
+
+echo
+echo "== app/ Manifests =="
+print_app_project_markers "$ROOT_DIR"
 
 echo
 echo "== Environment Files =="
 env_found=false
-for file in .env .env.local .env.example .env.development .env.production; do
+for file in .env .env.local .env.example .env.development .env.production app/.env app/.env.local app/.env.example app/.env.development app/.env.production; do
   if [[ -f "$ROOT_DIR/$file" ]]; then
     echo "[ok] $file"
     env_found=true
   fi
 done
 if [[ "$env_found" == false ]]; then
-  echo "[info] no root env files detected"
+  echo "[info] no root or app env files detected"
+fi
+
+echo
+echo "== Supabase Workspace =="
+check_file "supabase"
+check_file "supabase/migrations"
+check_file "supabase/seed"
+if [[ -d "$ROOT_DIR/supabase/functions" ]]; then
+  check_file "supabase/functions"
+else
+  echo "[info] no supabase/functions directory"
 fi
 
 echo
