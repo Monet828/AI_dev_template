@@ -7,24 +7,37 @@
 - 正式仕様と再利用資産を分離する
 - 実装本体とテストを明確に分ける
 - Claude / Codex どちらでも迷いにくい入口を作る
+- `meeting-hub` のような `app/` 中心の Web アプリ構成を標準化する
 
 ## 主要ディレクトリ
 
-### `src/`
+### `app/`
 
-アプリケーション本体を置く。
+デプロイ対象のアプリ本体を置く。  
+Web アプリや BFF/API サービスの第一候補。
 
 主な対象:
 
 - UI
-- API
+- route handlers / API endpoints
+- app 固有の data access
+- app 固有の type definitions
+
+### `src/`
+
+`app/` から切り出した共通ライブラリや、複数アプリで共有するコードを置く。
+
+主な対象:
+
 - domain logic
-- data access
+- shared data access
+- SDK
+- utility modules
 - type definitions
 
 ### `tests/`
 
-`src/` を検証するコードを置く。
+`app/` や `src/` を検証するコードを置く。
 
 主な対象:
 
@@ -35,7 +48,7 @@
 
 推奨:
 
-- 可能な限り `src/` と対応が分かる構成にする
+- 可能な限り `app/` や `src/` と対応が分かる構成にする
 - テストだけが仕様の正本にならないようにする
 
 ### `docs/`
@@ -64,6 +77,16 @@
 
 AIエージェントと開発者の共有作業記憶を置く。
 
+### `supabase/`
+
+DB を持つプロジェクトで使う任意ディレクトリ。
+
+主な対象:
+
+- migrations
+- seed
+- edge functions
+
 ### `scripts/`
 
 bootstrap、doctor、hooks、loop 補助を置く。
@@ -71,9 +94,11 @@ bootstrap、doctor、hooks、loop 補助を置く。
 ## 判断基準
 
 - 長期的に参照される仕様や設計判断は `docs/`
-- 実行可能な本体は `src/`
+- デプロイ対象の Web アプリは `app/`
+- 共有ロジックは `src/`
 - 本体の検証は `tests/`
 - 再利用資産は `assets/`
+- DB スキーマ運用は `supabase/`
 - セッション記録や短期記憶は `memory/`
 
 ## Pack 方針

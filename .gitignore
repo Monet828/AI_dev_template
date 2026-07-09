@@ -4,7 +4,13 @@ __MACOSX/
 node_modules/
 dist/
 build/
+.next/
+.turbo/
+.vercel/
 .env
 .env.local
 .env.development
 .env.production
+app/.env.local
+app/node_modules/
+app/.next/

@@ -1,28 +1,35 @@
 # AI_dev_template
 
 AI エージェントと人間が共有で使う、軽量な開発テンプレートです。
+`meeting-hub` のような `app/` 中心の Web アプリ構成をそのまま切り出せる骨格に寄せています。
 
 本体は最小構成に保ち、特化機能は `packs/` 配下の opt-in pack として追加します。  
 Claude Code と Codex の両方で使うことを前提にしています。
 
 ## 何が入っているか
 
+- `app/`
+  - デプロイ対象のアプリ本体。Next.js などのフロント / API パッケージをここに置く
 - `AGENTS.md`
   - このテンプレートの共通ルール。最優先の正典
 - `CLAUDE.md`
   - Claude Code 向けの薄いアダプタ
 - `docs/`
   - 正式仕様、運用ルール、ADR
+- `supabase/`
+  - DB マイグレーションや seed を置く任意ディレクトリ
 - `memory/`
   - current state、decisions、tasks、sessions
 - `scripts/`
   - install、bootstrap、doctor、hooks、loop 補助
 - `src/`
-  - アプリケーション本体
+  - `app/` から切り出した共通ライブラリ置き場
 - `tests/`
-  - 検証コード
+  - `app/` 外の共通ロジックや補助コードの検証
 - `packs/`
   - opt-in の追加機能
+- `assets/`
+  - 再利用する非コード資産
 
 ディレクトリ構成の詳細は `docs/project-structure.md` を参照してください。
 
@@ -39,10 +46,10 @@ Claude Code と Codex の両方で使うことを前提にしています。
 
 ```bash
 git clone https://github.com/Monet828/AI_dev_template.git
-cd AI_dev_templat
+cd AI_dev_template
 ```
 
-### 2. 新規プロジェクトを切る
+### 2. 新規プロジェクトを切る / 既存構成を始める
 
 おすすめの入口:
 
@@ -186,6 +193,23 @@ cd /path/to/new-project
 - `./scripts/hooks/stop.sh`
 - `./scripts/loop/verify.sh`
 - `./scripts/loop/resume.sh`
+
+## meeting-hub 型の使い方
+
+このテンプレートは、次のような構成をデフォルトにする。
+
+```text
+project/
+├── app/                  # Next.js / Vite / API サービス本体
+├── docs/                 # 要件、ADR、運用文書
+├── scripts/              # 補助スクリプト
+├── supabase/             # migrations / seed / functions
+├── memory/               # 作業記憶
+├── assets/               # 非コード資産
+└── packs/                # opt-in 機能
+```
+
+`src/` は `app/` 外に共通ライブラリを切りたいときだけ使う。
 
 ## どこを読めばいいか
 
