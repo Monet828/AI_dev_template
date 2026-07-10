@@ -384,3 +384,31 @@ AIエージェントは以下を行わない。
 6. 人間に確認すべき点
 
 ただし、リサーチ段階では推奨案を急がず、まず一次情報と事実を整理する。
+
+## 18. Git 運用ガバナンス（変更の取り扱い）
+
+前提: 以下のルールは prose（文章）だけでは守られない。文章の規約は「お願い」であり、
+モデルは無視しうる。だから本ガバナンスは二層で担保する。
+
+- **お願いの層**: この AGENTS.md の規約（正本）。
+- **ハードストップの層**: `scripts/hooks/pre-push`（git フック）と Claude Code の
+  `PreToolUse` フック。物理的にアクションをブロックする。強制はフックが担う。
+
+### 規約
+
+- 全ての変更は **Pull Request 経由** で人間のレビューに出す。人間の明示承認なしに
+  保護ブランチへは反映しない。
+- **保護ブランチへの直接 commit / push を禁止**する。保護ブランチ = default
+  （`main`）・integration・release など。default は自動検出する:
+  `git symbolic-ref --quiet --short refs/remotes/origin/HEAD`。
+  作業は必ず topic ブランチで行う。
+- **`--force` / `-f` の push を禁止**する。`reset --hard` / `clean -f` /
+  ブランチの強制削除などの破壊的操作は、**人間の明示指示があるときのみ**実行する。
+- **無言 push を禁止する（"ステルスプッシュ"の定義）**: push する前に、
+  「何を・どのブランチへ・なぜ」を人間に告げ、PR を開くこと。
+  push だけして黙る／PR を作らずに push する、は違反。
+- **完了時は「PR を開いて人間に引き渡して停止」**する。
+  マージ・リリースタグ付け・本番デプロイは人間の担当であり、エージェントは行わない。
+- このルールは prose だけでは守られない前提で運用する。強制は下記フックが担う。
+  - git フック: `scripts/hooks/pre-push`（`scripts/hooks/install-hooks.sh` で導入）
+  - Claude 固有: `PreToolUse` フック（`docs/playbooks/git-governance-pretooluse.md` 参照）
