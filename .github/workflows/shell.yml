@@ -14,4 +14,6 @@ jobs:
       - name: bash -n
         run: find . -type f -name '*.sh' -print0 | xargs -0 -n 1 bash -n
       - name: shellcheck
-        run: find . -type f -name '*.sh' -print0 | xargs -0 shellcheck
+        # 警告/情報（SC2034 など、source される変数の誤検知を含む）ではなく
+        # 実エラーのみで失敗させる。構文エラーは上の `bash -n` でも捕捉している。
+        run: find . -type f -name '*.sh' -print0 | xargs -0 shellcheck --severity=error
