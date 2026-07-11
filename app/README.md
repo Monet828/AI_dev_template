@@ -8,4 +8,4 @@
 - Vite
 - FastAPI / Express などの API サービス
 
-`meeting-hub` と同じく、Web アプリのコードはまず `app/` に寄せる。
+Web アプリのコードはまず `app/` に寄せる。

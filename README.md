@@ -1,7 +1,7 @@
 # AI_dev_template
 
 AI エージェントと人間が共有で使う、軽量な開発テンプレートです。
-`meeting-hub` のような `app/` 中心の Web アプリ構成をそのまま切り出せる骨格に寄せています。
+`app/` 中心の Web アプリ構成をそのまま切り出せる骨格に寄せています。
 
 本体は最小構成に保ち、特化機能は `packs/` 配下の opt-in pack として追加します。  
 Claude Code と Codex の両方で使うことを前提にしています。
@@ -196,7 +196,7 @@ cd /path/to/new-project
 - `./scripts/loop/verify.sh`
 - `./scripts/loop/resume.sh`
 
-## meeting-hub 型の使い方
+## `app/` 中心の使い方
 
 このテンプレートは、次のような構成をデフォルトにする。
 
