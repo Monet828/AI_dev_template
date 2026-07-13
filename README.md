@@ -16,8 +16,6 @@ Claude Code と Codex の両方で使うことを前提にしています。
   - Claude Code 向けの薄いアダプタ
 - `docs/`
   - 正式仕様、運用ルール、ADR
-- `supabase/`
-  - DB マイグレーションや seed を置く任意ディレクトリ
 - `memory/`
   - current state、decisions、tasks、sessions
 - `scripts/`
@@ -205,7 +203,6 @@ project/
 ├── app/                  # Next.js / Vite / API サービス本体
 ├── docs/                 # 要件、ADR、運用文書
 ├── scripts/              # 補助スクリプト
-├── supabase/             # migrations / seed / functions
 ├── memory/               # 作業記憶
 ├── assets/               # 非コード資産
 ├── skills/               # 再利用可能な skill 本体

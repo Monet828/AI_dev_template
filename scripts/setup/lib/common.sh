@@ -16,10 +16,6 @@ required_paths=(
   "scripts/setup/doctor.sh"
   "scripts/hooks/save-memory.sh"
   "src"
-  "supabase"
-  "supabase/README.md"
-  "supabase/migrations"
-  "supabase/seed"
   "tests"
 )
 
