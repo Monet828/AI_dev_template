@@ -89,16 +89,6 @@ AIエージェントと開発者の共有作業記憶を置く。
 - `assets/`
 - skill ごとのテンプレや補助資料
 
-### `supabase/`
-
-DB を持つプロジェクトで使う任意ディレクトリ。
-
-主な対象:
-
-- migrations
-- seed
-- edge functions
-
 ### `scripts/`
 
 bootstrap、doctor、hooks、loop 補助を置く。
@@ -111,7 +101,6 @@ bootstrap、doctor、hooks、loop 補助を置く。
 - 本体の検証は `tests/`
 - 再利用資産は `assets/`
 - 再利用可能な能力は `skills/`
-- DB スキーマ運用は `supabase/`
 - セッション記録や短期記憶は `memory/`
 
 ## Pack 方針

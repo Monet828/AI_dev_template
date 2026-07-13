@@ -99,13 +99,6 @@ if [[ -f "$ROOT_DIR/app/README.md" ]]; then
   sed -n '1,80p' "$ROOT_DIR/app/README.md" || true
 fi
 
-print_section "Supabase Workspace"
-if [[ -f "$ROOT_DIR/supabase/README.md" ]]; then
-  sed -n '1,80p' "$ROOT_DIR/supabase/README.md" || true
-else
-  echo "[info] no supabase workspace guide"
-fi
-
 print_section "Autonomy Reminder"
 echo "Before starting, define Goal / Scope / Out of Scope / Stop Conditions in memory/sessions."
 echo "Within that boundary, proceed without asking for every small step."

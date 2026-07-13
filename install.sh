@@ -15,9 +15,6 @@ required_dirs=(
   "scripts/loop"
   "scripts/setup"
   "src"
-  "supabase/functions"
-  "supabase/migrations"
-  "supabase/seed"
   "tests"
 )
 

@@ -43,16 +43,6 @@ if [[ "$env_found" == false ]]; then
   echo "[info] no root or app env files detected"
 fi
 
-echo
-echo "== Supabase Workspace =="
-check_file "supabase"
-check_file "supabase/migrations"
-check_file "supabase/seed"
-if [[ -d "$ROOT_DIR/supabase/functions" ]]; then
-  check_file "supabase/functions"
-else
-  echo "[info] no supabase/functions directory"
-fi
 
 echo
 echo "== Optional Slide Assets =="
