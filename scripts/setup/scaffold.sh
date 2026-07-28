@@ -138,7 +138,7 @@ apply_pack() {
 
   if [[ -d "$merge_dir" ]]; then
     while IFS= read -r file; do
-      local rel_path="${file#$merge_dir/}"
+      local rel_path="${file#"$merge_dir"/}"
       mkdir -p "$STAGE_DIR/$(dirname "$rel_path")"
       cp "$file" "$STAGE_DIR/$rel_path"
       if [[ "$file" == *.sh ]]; then
@@ -149,7 +149,7 @@ apply_pack() {
 
   if [[ -d "$append_dir" ]]; then
     while IFS= read -r fragment; do
-      local rel_path="${fragment#$append_dir/}"
+      local rel_path="${fragment#"$append_dir"/}"
       local target_file="$STAGE_DIR/$rel_path"
       if [[ ! -f "$target_file" ]]; then
         echo "[error] append target missing: $rel_path" >&2

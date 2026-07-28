@@ -151,7 +151,7 @@ else
   echo "== Session Freshness =="
   latest_session="$(find "$ROOT_DIR/memory/sessions" -maxdepth 1 -type f -name '*.md' 2>/dev/null | sort | tail -n 1 || true)"
   if [[ -n "$latest_session" ]]; then
-    echo "[latest] ${latest_session#$ROOT_DIR/}"
+    echo "[latest] ${latest_session#"$ROOT_DIR"/}"
   else
     echo "[info] no session markdown files found"
   fi

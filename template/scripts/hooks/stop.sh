@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-
 echo "== Stop Boundary =="
 echo "Pause and ask for confirmation if one of these is true:"
 echo "- scope expansion is required"

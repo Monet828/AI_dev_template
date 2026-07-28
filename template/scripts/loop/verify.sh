@@ -14,7 +14,7 @@ set -uo pipefail
 # ./record-verification.sh, which now owns that job under its own name.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cd "$ROOT_DIR"
+cd "$ROOT_DIR" || exit 1
 
 RAN=0
 FAILED=0
