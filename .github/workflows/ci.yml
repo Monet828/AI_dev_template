@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  shell:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Install shellcheck (macos)
+        if: matrix.os == 'macos-latest'
+        run: brew install shellcheck
+      - name: bash -n
+        run: find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -n 1 bash -n
+      - name: shellcheck
+        run: find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 shellcheck
+
+  integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run regression suite
+        run: ./tests/regression/run.sh
+
+  generation-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        profile:
+          [minimal, understand, research, strategy, full, full-slides]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate, doctor-check, and verify no template leak (${{ matrix.profile }})
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d)"
+          TARGET="$TMP/project"
+          ./scripts/setup/new-project.sh "$TARGET" "${{ matrix.profile }}"
+
+          (cd "$TARGET" && ./scripts/setup/doctor.sh --json)
+
+          if [[ -e "$TARGET/scripts/setup/scaffold.sh" ]]; then
+            echo "::error::generated project must not contain scripts/setup/scaffold.sh"
+            exit 1
+          fi
+          if [[ -e "$TARGET/scripts/setup/new-project.sh" ]]; then
+            echo "::error::generated project must not contain scripts/setup/new-project.sh"
+            exit 1
+          fi
+          if [[ -e "$TARGET/packs" ]]; then
+            echo "::error::generated project must not contain a packs/ directory"
+            exit 1
+          fi
+          if [[ -e "$TARGET/tests/regression" ]]; then
+            echo "::error::generated project must not contain the generator's own tests/regression suite"
+            exit 1
+          fi
+          if [[ -e "$TARGET/.git" ]]; then
+            echo "::error::generated project must not contain .git"
+            exit 1
+          fi
+          if [[ ! -f "$TARGET/.ai-dev-template.yml" ]]; then
+            echo "::error::generated project is missing .ai-dev-template.yml"
+            exit 1
+          fi
+
+          echo "OK: ${{ matrix.profile }} on ${{ runner.os }} generated cleanly with no leaks"
