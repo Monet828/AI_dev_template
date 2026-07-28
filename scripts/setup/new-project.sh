@@ -53,7 +53,14 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# profile_label reflects the profile name only when profile-based mapping
+# actually determined the pack list below; if the caller passed --packs
+# explicitly, "profile" isn't a meaningful concept for this run and the
+# generated project's .ai-dev-template.yml should say so honestly.
+profile_label="custom"
+
 if [[ -z "$packs" ]]; then
+  profile_label="$profile"
   case "$profile" in
     minimal)
       packs=""
@@ -80,6 +87,8 @@ if [[ -z "$packs" ]]; then
       ;;
   esac
 fi
+
+export AI_DEV_TEMPLATE_PROFILE="$profile_label"
 
 echo "== New Project =="
 echo "target: $target_dir"
