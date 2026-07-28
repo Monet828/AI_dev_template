@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+TEMPLATE_ROOT="$ROOT_DIR/template"
 ADDON_ROOT_DEFAULT="$ROOT_DIR/packs"
 ADDON_ROOT="${AI_DEV_TEMPLATE_ADDON_ROOT:-$ADDON_ROOT_DEFAULT}"
 
@@ -68,7 +69,6 @@ copy_base_template() {
     ! -name '.DS_Store' \
     ! -name '.git' \
     ! -name 'memory' \
-    ! -name 'packs' \
     -print | sort)
 
   for entry in "${entries[@]}"; do
@@ -140,12 +140,17 @@ apply_pack() {
   find "$TARGET_DIR" -name '.DS_Store' -delete
 }
 
+if [[ ! -d "$TEMPLATE_ROOT" ]]; then
+  echo "[error] template root not found: $TEMPLATE_ROOT" >&2
+  exit 1
+fi
+
 echo "== Scaffold Project =="
-echo "base: $ROOT_DIR"
+echo "base: $TEMPLATE_ROOT"
 echo "target: $TARGET_DIR"
 echo "pack root: $ADDON_ROOT"
 
-copy_base_template "$ROOT_DIR" "$TARGET_DIR"
+copy_base_template "$TEMPLATE_ROOT" "$TARGET_DIR"
 
 if [[ -n "$PACKS" ]]; then
   IFS=',' read -r -a pack_list <<< "$PACKS"

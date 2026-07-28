@@ -346,10 +346,8 @@ session には、必要に応じて以下を残す。
 
 - `./install.sh`
 - `./run.sh`
-- `./scripts/setup/new-project.sh`
 - `./scripts/setup/bootstrap.sh`
 - `./scripts/setup/doctor.sh`
-- `./scripts/setup/scaffold.sh`
 - `./scripts/hooks/pre-task.sh`
 - `./scripts/hooks/post-task.sh`
 - `./scripts/hooks/stop.sh`
