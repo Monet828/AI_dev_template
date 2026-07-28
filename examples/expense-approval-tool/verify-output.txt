@@ -1,0 +1,17 @@
+[PASS] shell syntax
+[PASS] shellcheck
+[SKIP] pytest: no pyproject.toml
+[SKIP] ruff: no pyproject.toml
+[SKIP] mypy: no pyproject.toml
+[SKIP] npm test: no ./package.json
+[SKIP] npm lint: no ./package.json
+[SKIP] npm build: no ./package.json
+[SKIP] npm test (app/): no app/package.json
+[SKIP] npm lint (app/): no app/package.json
+[SKIP] npm build (app/): no app/package.json
+[SKIP] cargo test: no Cargo.toml
+[SKIP] cargo clippy: no Cargo.toml
+[SKIP] go test: no go.mod
+
+== Summary ==
+ran: 2, failed: 0
