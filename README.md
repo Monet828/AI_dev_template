@@ -1,230 +1,142 @@
 # AI_dev_template
 
-AI エージェントと人間が共有で使う、軽量な開発テンプレートです。
-`app/` 中心の Web アプリ構成をそのまま切り出せる骨格に寄せています。
+AIコーディングエージェント（Claude Code、Codexなど）と人間が安全に協働するための、軽量な開発テンプレート生成ツール。
 
-本体は最小構成に保ち、特化機能は `packs/` 配下の opt-in pack として追加します。  
-Claude Code と Codex の両方で使うことを前提にしています。
+## AI支援開発で解決する問題
 
-## 何が入っているか
+AIコーディングエージェントに開発を任せていると、こういうことが起きる。
 
-- `app/`
-  - デプロイ対象のアプリ本体。Next.js などのフロント / API パッケージをここに置く
-- `AGENTS.md`
-  - このテンプレートの共通ルール。最優先の正典
-- `CLAUDE.md`
-  - Claude Code 向けの薄いアダプタ
-- `docs/`
-  - 正式仕様、運用ルール、ADR
-- `memory/`
-  - current state、decisions、tasks、sessions
-- `scripts/`
-  - install、bootstrap、doctor、hooks、loop 補助
-- `src/`
-  - `app/` から切り出した共通ライブラリ置き場
-- `tests/`
-  - `app/` 外の共通ロジックや補助コードの検証
-- `packs/`
-  - opt-in の追加機能
-- `assets/`
-  - 再利用する非コード資産
-- `skills/`
-  - 再利用可能な skill 本体。調査、設計、プロトタイプ化などの能力をモジュール化する
+- **エージェントが文脈を見失う** — セッションが変わると、何を目指していたか・何を決めたかが消える
+- **仕様が暗黙に変わる** — 「ついでに」直した箇所が、実は合意していない仕様変更だったりする
+- **スコープ外の変更が紛れ込む** — 頼んでいないリファクタリングや大量のファイル生成が増える
+- **中断後に再開しづらい** — どこまでやったか、どこで止まっていたかがチャット履歴の中に埋もれる
+- **検証結果や意思決定が残らない** — 「テストは通しました」は本当か？ なぜその設計にしたのか？ が後から分からない
 
-ディレクトリ構成の詳細は `docs/project-structure.md` を参照してください。
+このテンプレートは、これらをチャットの記憶ではなく **Git管理されたファイル** へ外部化することで対応する。プロジェクトの状態（`memory/current-state.md`）、意思決定の記録（`memory/decisions.md`）、作業境界（Goal / Scope / Out of Scope / Stop Conditions）、検証結果（`verify.sh`の実行結果と `record-verification.sh` の記録）が、すべてファイルとして残り、次のセッション・別のエージェント・人間のレビュアーが読める形になる。
 
-## 基本思想
-
-- 本体テンプレートは pack なしで自己完結している
-- 特定の開発スタイルは `packs/` として追加する
-- `docs/` は正式仕様、`memory/` は作業記憶として分離する
-- AI の内部記憶を正本にせず、markdown ファイルに状態を残す
-
-## クイックスタート
-
-### 1. テンプレートを取得する
+## 30秒で試すQuick Start
 
 ```bash
 git clone https://github.com/Monet828/AI_dev_template.git
 cd AI_dev_template
-```
-
-### 2. 新規プロジェクトを切る / 既存構成を始める
-
-おすすめの入口:
-
-```bash
 ./scripts/setup/new-project.sh /path/to/new-project full
-```
-
-profile を使わず最小構成で切る:
-
-```bash
-./scripts/setup/new-project.sh /path/to/new-project
-```
-
-profile ではなく pack を明示したい場合:
-
-```bash
-./scripts/setup/new-project.sh /path/to/new-project --packs understand-first,evidence-first,problem-first
-```
-
-低レベルの直接コマンド:
-
-pack なしの最小構成:
-
-```bash
-./scripts/setup/scaffold.sh /path/to/new-project
-```
-
-pack あり:
-
-```bash
-./scripts/setup/scaffold.sh /path/to/new-project --with understand-first,evidence-first,problem-first
-```
-
-### 3. 新規プロジェクト側で初期確認する
-
-```bash
 cd /path/to/new-project
 ./scripts/setup/doctor.sh
-./scripts/setup/bootstrap.sh
 ```
 
-## 利用可能な pack
+`doctor.sh` が `passed: N, warnings: 0, errors: 0` を表示すれば、プロジェクトは正しく生成されている。
 
-### `understand-first`
+## 生成されるもの
 
-既存コードや既存仕様を理解してから触るための pack です。
+`new-project.sh`（内部で `scaffold.sh` を呼ぶ）は、`template/` にあるベーステンプレートと、選択した `packs/` をマージして、指定したディレクトリに新しいプロジェクトを作る。生成先には以下が含まれる。
 
-向いている場面:
+- `AGENTS.md` / `CLAUDE.md` — AIエージェント共通の作業ルール
+- `app/` — デプロイ対象のアプリ本体
+- `docs/` — 正式仕様、ADR、運用知識
+- `memory/` — 作業記憶（current-state / decisions / tasks / sessions）
+- `scripts/` — bootstrap、doctor、verify、hooks、loop補助
+- `skills/` / `assets/` — 再利用可能な能力・資産
+- `.ai-dev-template.yml` — どの `template_version` / `profile` / packで生成されたかの記録
+- `LICENSE`（MIT、プレースホルダーのコピーライト表記入り）
 
-- 既存リポジトリに入る
-- 影響範囲を把握してから変更したい
-- 責務や依存関係の誤解を減らしたい
+生成先には**含まれない**もの: このリポジトリ自身の生成ツール（`scaffold.sh`/`new-project.sh`）、`packs/`（pack管理コードは生成後は使えないため）、このリポジトリ自身のテスト（`tests/regression/`）、このリポジトリ自身のREADME/CI、`.git`。詳しい仕分けの理由は [`CONTRIBUTING.md`](CONTRIBUTING.md) を参照。
 
-主な追加物:
+## profile一覧
 
-- `memory/understanding-map.md`
-- `scripts/workflows/understand-first.sh`
+`new-project.sh <target_dir> <profile>` で使えるprofile。
 
-### `evidence-first`
+| profile | 適用されるpack |
+|---|---|
+| `minimal` | なし |
+| `understand` | `understand-first` |
+| `research` | `understand-first`, `evidence-first` |
+| `strategy` | `evidence-first`, `problem-first` |
+| `full` | `understand-first`, `evidence-first`, `problem-first` |
+| `full-slides` | `understand-first`, `evidence-first`, `problem-first`, `slides` |
 
-提案や比較の前に、根拠を先に積むための pack です。
+profileの代わりに `--packs pack1,pack2` でpackを直接指定することもできる（この場合profileのマッピングは使われない）。
 
-向いている場面:
+## pack一覧
 
-- 調査
-- 比較検討
-- 設計判断前のリサーチ
+| pack | 何を解決するか | 主な追加物 |
+|---|---|---|
+| `understand-first` | 既存コードや既存仕様を理解してから触る | `memory/understanding-map.md`, `scripts/workflows/understand-first.sh` |
+| `evidence-first` | 提案や比較の前に根拠を先に積む | `memory/evidence-log.md`, `scripts/workflows/evidence-first.sh` |
+| `problem-first` | 何を解くかを先に定義し、分解して進める | `memory/problem-map.md`, `docs/templates/PROBLEM-BRIEF.md`, `scripts/workflows/problem-framing.sh` |
+| `slides` | スライド資産を追加する | `assets/slides/SLIDE-md/`, `assets/slides/SLIDE-PATTERN/` |
 
-主な追加物:
+各packの `pack-manifest.sh` に実際のバージョンがあり、生成時に `.ai-dev-template.yml` へ記録される。
 
-- `memory/evidence-log.md`
-- `scripts/workflows/evidence-first.sh`
+## 安全性とGit運用
 
-### `problem-first`
+- **このテンプレートはgit hookを一切インストールしない。** `scripts/hooks/*.sh` はgit hookではなく、AIエージェント向けの手動チェックポイント台本（pre-task/post-task/stop/save-memory）である。`.git/hooks/` への登録や `core.hooksPath` の設定は行わない。
+- 仮にgit hookを自分で追加したとしても、hookは**インストールされていなければ動作しない**し、`--no-verify` で簡単に回避できる。AIエージェント自身が環境変数で回避条件を設定することもできてしまう。**ローカルのgit hookはセキュリティ境界ではない。**
+- 本当の保護境界はGitHubの branch protection / ruleset である。例（`gh` CLI、コピペして自分で実行するためのものであり、このリポジトリのスクリプトが自動実行することはない）:
+  ```bash
+  gh api repos/:owner/:repo/rulesets -X POST \
+    -f name='protect-main' \
+    -f target='branch' \
+    -f enforcement='active' \
+    -f 'conditions[ref_name][include][]=refs/heads/main' \
+    -f 'rules[][type]=pull_request'
+  ```
+- 生成処理自体はトランザクショナル: `scaffold.sh` は一時ディレクトリで組み立て、全工程が成功して初めて指定先へ移動する。既存の（空でない）ディレクトリを上書きすることはない。
 
-何を解くかを先に定義し、North Star から分解して進める pack です。
+## 検証方法
 
-向いている場面:
-
-- 問題設定が曖昧
-- issue が流れやすい
-- 大目標と日々の作業をつなげたい
-
-主な追加物:
-
-- `memory/problem-map.md`
-- `docs/templates/PROBLEM-BRIEF.md`
-- `scripts/workflows/problem-framing.sh`
-
-### `slides`
-
-スライド資産を追加する pack です。
-
-向いている場面:
-
-- 提案資料やプレゼンを作る
-- ローカルの slide 資産を再利用したい
-
-主な追加物:
-
-- `assets/slides/SLIDE-md/`
-- `assets/slides/SLIDE-PATTERN/`
-
-## pack のおすすめ組み合わせ
-
-既存コードベースを安全に触る:
+生成先プロジェクトの中で:
 
 ```bash
-./scripts/setup/new-project.sh /path/to/new-project understand
+./scripts/loop/verify.sh
 ```
 
-調査から問題設定までやる:
+`pyproject.toml`/`package.json`/`Cargo.toml`/`go.mod` の有無と設定内容を検出し、実際に構成されているテスト/lint/buildだけを実行する。shell構文チェックは常に実行する。出力は `[PASS]`/`[SKIP: 理由]`/`[FAIL]` で、設定されているのに失敗した項目が1つでもあれば非0で終了する。
+
+結果と所感を `memory/sessions/` に残したい場合は、続けて:
 
 ```bash
-./scripts/setup/new-project.sh /path/to/new-project strategy
+./scripts/loop/record-verification.sh
 ```
 
-既存コードを理解しつつ、根拠を集めて問題設定する:
+このリポジトリ自身（AI_dev_template側）の検証は:
 
 ```bash
-./scripts/setup/new-project.sh /path/to/new-project full
+find . -type f -name '*.sh' -not -path './.git/*' -print0 | xargs -0 -n 1 bash -n
+shellcheck $(find . -type f -name '*.sh' -not -path './.git/*')
+./tests/regression/run.sh
 ```
 
-資料作成も含める:
+## Example
 
-```bash
-./scripts/setup/new-project.sh /path/to/new-project full-slides
-```
+`examples/` に、実際の生成コマンドで再現できる小さな例が1つある。課題設定、選んだprofile/pack、生成された主要ファイル、session logの例、decision recordの例、`verify.sh` の実行結果、中断後に別エージェントが再開する例をまとめてある。詳しくは [`examples/README.md`](examples/README.md)。
 
-## 標準コマンド
+## 設計思想
 
-- `./install.sh`
-- `./run.sh`
-- `./scripts/setup/new-project.sh`
-- `./scripts/setup/scaffold.sh`
-- `./scripts/setup/doctor.sh`
-- `./scripts/setup/bootstrap.sh`
-- `./scripts/hooks/pre-task.sh`
-- `./scripts/hooks/post-task.sh`
-- `./scripts/hooks/save-memory.sh`
-- `./scripts/hooks/stop.sh`
-- `./scripts/loop/verify.sh`
-- `./scripts/loop/resume.sh`
+- プロジェクトの状態・仕様・判断・スコープ境界・検証記録は、チャットの記憶ではなくバージョン管理可能なファイルへ外部化する
+- 本体テンプレートはpackなしで自己完結している
+- 特化した開発スタイルは `packs/` 配下のopt-inパックとして追加する
+- `docs/` は正式仕様、`memory/` は作業記憶として分離する
+- 生成は破壊的でない・トランザクショナルである
 
-## `app/` 中心の使い方
+## 非目標
 
-このテンプレートは、次のような構成をデフォルトにする。
+- 大規模なGUI
+- Webサービス化
+- npm/pipなどへの公開
+- 複雑なplugin marketplace
+- AIモデルAPIの直接統合
+- 全スクリプトの別言語への全面書き換え
 
-```text
-project/
-├── app/                  # Next.js / Vite / API サービス本体
-├── docs/                 # 要件、ADR、運用文書
-├── scripts/              # 補助スクリプト
-├── memory/               # 作業記憶
-├── assets/               # 非コード資産
-├── skills/               # 再利用可能な skill 本体
-└── packs/                # opt-in 機能
-```
+## 制約
 
-`src/` は `app/` 外に共通ライブラリを切りたいときだけ使う。
+- シェルスクリプトはmacOS標準の `/bin/bash`（3.2系、bash 4+専用構文は使用不可）とLinuxの両方で動作することを前提にしている。CIは `ubuntu-latest`/`macos-latest` の両方で検証する。
+- `verify.sh` のエコシステム検出はヒューリスティック（`package.json` のプレースホルダースクリプトの判定など）であり、完璧ではない
+- pack manifestは現状 `source` される平文シェルである（詳細は [`SECURITY.md`](SECURITY.md)）
 
-## どこを読めばいいか
+## コントリビューション
 
-- 共通ルールを知りたい:
-  `AGENTS.md`
-- ディレクトリ構成を知りたい:
-  `docs/project-structure.md`
-- 現在の memory 運用を知りたい:
-  `memory/README.md`
-- loop engineering の基本を知りたい:
-  `docs/playbooks/loop-engineering.md`
+[`CONTRIBUTING.md`](CONTRIBUTING.md) を参照。特に「`template/` と リポジトリルートの違い」は最初に読むこと。
 
-## 運用上の推奨
+## ライセンス
 
-- テンプレート本体は GitHub を正本にして育てる
-- 新規案件ごとに `scaffold.sh` で切り出す
-- ローカルの雑なコピペ運用ではなく、pack を明示して再現可能にする
-- 長期的な判断は `docs/` に昇格し、一時的な文脈は `memory/` に留める
+[MIT License](LICENSE)。生成先プロジェクトにも、コピーライト表記がプレースホルダーになった同ライセンスが含まれる（`template/LICENSE`）。
