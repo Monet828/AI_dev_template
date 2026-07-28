@@ -17,6 +17,6 @@ Claude Codeは、このリポジトリで作業する前に必ず `AGENTS.md` �
 - 作業開始時は `./scripts/hooks/pre-task.sh` または `./scripts/setup/bootstrap.sh` を優先して使う。
 - 作業終了時や停止時は `./scripts/hooks/post-task.sh` と `./scripts/hooks/save-memory.sh` を優先して使う。
 - loop を再開するときは `./scripts/loop/resume.sh` を優先して使う。
-- 完了前の見直しには `./scripts/loop/verify.sh` を優先して使う。
+- 完了前の見直しには `./scripts/loop/verify.sh`（実チェック）を実行し、`./scripts/loop/record-verification.sh`（結果と所感の記録）を優先して使う。
 - 未確定事項は流しやすいので、判断保留の論点は `memory/sessions/` の `Unresolved / Open Questions` に残す。
 - 次回に影響する未確定事項は、必要に応じて `memory/current-state.md` または `memory/tasks.md` にも残す。

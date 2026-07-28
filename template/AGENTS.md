@@ -143,6 +143,8 @@ AIが解釈や提案を求められた場合のみ、事実と意見を分けて
 
 テストが実行できない場合は、実行できなかった理由と、代替の確認方法を明記する。
 
+`./scripts/loop/verify.sh` は、設定されているテスト/lint/buildを検出して実際に実行する。設定されていない項目は `[SKIP]` として明示され、成功扱いにはならない。
+
 ## 10. メモリ更新ルール
 
 `memory/` は、AIエージェント間の文脈共有のために使う。
@@ -352,7 +354,8 @@ session には、必要に応じて以下を残す。
 - `./scripts/hooks/post-task.sh`
 - `./scripts/hooks/stop.sh`
 - `./scripts/hooks/save-memory.sh`
-- `./scripts/loop/verify.sh`
+- `./scripts/loop/verify.sh`（実チェック。設定されているテスト/lint/buildを検出して実行し、`[PASS]/[SKIP]/[FAIL]` を返す）
+- `./scripts/loop/record-verification.sh`（自己申告ログ。`verify.sh` を実行した後、その結果と所感を `memory/sessions/` に記録する）
 - `./scripts/loop/resume.sh`
 
 これらが未実装の場合は、追加時にこの節を更新する。

@@ -14,7 +14,7 @@
 2. `bootstrap.sh`
 3. execute
 4. `stop.sh` で境界確認
-5. `verify.sh`
+5. `verify.sh`（実チェック）→ `record-verification.sh`（結果と所感の記録）
 6. `save-memory.sh`
 7. done or blocked
 
