@@ -33,7 +33,7 @@ done < <(find . -type f -name '*.sh' \
   -not -path '*/node_modules/*' \
   2>/dev/null | sort)
 
-if [[ "${#sh_files[@]:-0}" -eq 0 ]]; then
+if [[ "${#sh_files[@]}" -eq 0 ]]; then
   skip "shell syntax" "no .sh files found"
   skip "shellcheck" "no .sh files found"
 else
