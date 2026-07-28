@@ -44,7 +44,7 @@
 
 ## 安全性とGit運用
 
-`scripts/hooks/pre-push` は保護ブランチへの直push・force pushを検出してブロックするopt-inのフックだが、**デフォルトではインストールされていない**。導入するには `./scripts/hooks/install-hooks.sh` を実行する。導入してもセキュリティ境界にはならない（`ALLOW_PROTECTED_PUSH=1`や`--no-verify`で回避できるため）。ブランチ保護が本当に必要な場合は、GitHubのbranch protection / rulesetをリポジトリ設定側で行うこと。`scripts/hooks/{pre-task,post-task,stop,save-memory}.sh` はこれとは別物で、git hookではなくAIエージェント向けの手動チェックポイント台本である。
+このプロジェクトにgit hookは一切インストールされていない（`scripts/hooks/*.sh` はgit hookではなく、AIエージェント向けの手動チェックポイント台本）。git hookは導入しても `--no-verify` で回避できるため、セキュリティ境界にはならない。ブランチ保護が必要な場合は、GitHubのbranch protection / rulesetをリポジトリ設定側で行うこと。
 
 ## もっとpackを追加したい場合
 

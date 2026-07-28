@@ -71,8 +71,8 @@ Each pack's real version lives in its `pack-manifest.sh` and is recorded into `.
 
 ## Safety & git workflow
 
-- **This template never installs a git hook.** `scripts/hooks/*.sh` are not git hooks -- they're manual checkpoint scripts for AI agents (pre-task/post-task/stop/save-memory). Nothing registers them under `.git/hooks/` or via `core.hooksPath`.
-- Even if you add a git hook yourself later: a hook only runs if it's **installed**, and `--no-verify` bypasses it trivially. An AI agent could just as easily set an environment-variable override. **A local git hook is not a security boundary.**
+- `scripts/hooks/pre-push` is an **opt-in pre-push hook** that detects and blocks direct pushes and force-pushes to protected branches (main/master/develop/integration/release, plus `origin`'s default branch). Installing it requires explicitly running `./scripts/hooks/install-hooks.sh` -- **nothing is installed by default**.
+- This hook is **not a security boundary**. `ALLOW_PROTECTED_PUSH=1 git push ...` lets a human deliberately override it, `--no-verify` bypasses it too, and it never runs at all unless `install-hooks.sh` was run. An AI agent could just as easily set an environment-variable override itself. `scripts/hooks/{pre-task,post-task,stop,save-memory}.sh` are a separate thing entirely -- not git hooks, just manual checkpoint scripts for AI agents.
 - The real protection boundary is GitHub branch protection / rulesets. Example (`gh` CLI, meant to be copy-pasted and run deliberately by you -- nothing in this repo runs it automatically):
   ```bash
   gh api repos/:owner/:repo/rulesets -X POST \

@@ -69,8 +69,8 @@ profileの代わりに `--packs pack1,pack2` でpackを直接指定すること�
 
 ## 安全性とGit運用
 
-- **このテンプレートはgit hookを一切インストールしない。** `scripts/hooks/*.sh` はgit hookではなく、AIエージェント向けの手動チェックポイント台本（pre-task/post-task/stop/save-memory）である。`.git/hooks/` への登録や `core.hooksPath` の設定は行わない。
-- 仮にgit hookを自分で追加したとしても、hookは**インストールされていなければ動作しない**し、`--no-verify` で簡単に回避できる。AIエージェント自身が環境変数で回避条件を設定することもできてしまう。**ローカルのgit hookはセキュリティ境界ではない。**
+- `scripts/hooks/pre-push` は**opt-inのpre-pushフック**で、保護ブランチ（main/master/develop/integration/release、および`origin`のdefaultブランチ）への直push・force pushを検出してブロックする。導入するには `./scripts/hooks/install-hooks.sh` を明示的に実行する必要があり、**デフォルトでは何もインストールされない**。
+- このフックは**セキュリティ境界ではない**。`ALLOW_PROTECTED_PUSH=1 git push ...` で人間が意識的に上書きできるし、`--no-verify` でも回避できるし、`install-hooks.sh` を実行していなければ最初から動作しない。AIエージェント自身が環境変数を設定して回避することもできてしまう。`scripts/hooks/{pre-task,post-task,stop,save-memory}.sh` はこれとは別物で、そもそもgit hookではなくAIエージェント向けの手動チェックポイント台本である。
 - 本当の保護境界はGitHubの branch protection / ruleset である。例（`gh` CLI、コピペして自分で実行するためのものであり、このリポジトリのスクリプトが自動実行することはない）:
   ```bash
   gh api repos/:owner/:repo/rulesets -X POST \

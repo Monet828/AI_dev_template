@@ -131,14 +131,6 @@ else
   fi
 
   echo
-  echo "== Optional Supabase Functions =="
-  if [[ -d "$ROOT_DIR/supabase/functions" ]]; then
-    check_file "supabase/functions"
-  else
-    echo "[info] no supabase/functions directory"
-  fi
-
-  echo
   echo "== Optional Slide Assets =="
   if [[ -d "$ROOT_DIR/assets/slides" ]]; then
     check_file "assets/slides/SLIDE-md"

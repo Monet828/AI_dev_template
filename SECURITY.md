@@ -37,10 +37,12 @@ configured (`npm run test`, `pytest`, `cargo test`, etc.). It does not
 sandbox these -- it assumes you already trust the code in the project
 you're verifying, which is true by construction (it's your own project).
 
-### No git hook is installed by this template
+### The pre-push hook is opt-in and is not a security boundary
 
-Nothing in this repository installs a git hook of any kind (see
-`template/README.md`'s "Safety & git workflow" section). There is no
-pre-push enforcement to bypass, because none exists. Do not rely on a local
-hook as a security boundary even if you add one later -- see that section
-for why.
+`scripts/hooks/pre-push` blocks direct/force pushes to protected branches,
+but it is never installed automatically -- it only takes effect after
+someone explicitly runs `./scripts/hooks/install-hooks.sh`. Even installed,
+it's bypassable (`ALLOW_PROTECTED_PUSH=1`, `--no-verify`, or simply never
+installing it in the first place). Do not treat it as a security boundary;
+see `template/README.md`'s "Safety & git workflow" section for the actual
+protection boundary (GitHub branch protection / rulesets).

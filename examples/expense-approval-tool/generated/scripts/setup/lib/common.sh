@@ -26,10 +26,6 @@ warn_paths=(
   "skills"
   "assets/patterns"
   "src"
-  "supabase"
-  "supabase/README.md"
-  "supabase/migrations"
-  "supabase/seed"
   "tests"
 )
 

@@ -11,7 +11,7 @@ This repo has two distinct roots that are easy to mix up:
 - `template/` -- everything that gets copied into a generated project.
   Edit here for anything an end user of the template should see (`AGENTS.md`,
   `CLAUDE.md`, `scripts/hooks/`, `scripts/loop/`, `scripts/setup/{bootstrap,
-  doctor,lib}`, `memory/` templates, `docs/`, `app/`, `src/`, `supabase/`,
+  doctor,lib}`, `memory/` templates, `docs/`, `app/`, `src/`,
   `skills/`, `assets/`).
 - Repository root -- the generator itself. `scripts/setup/scaffold.sh` and
   `scripts/setup/new-project.sh` build a project from `template/` plus
