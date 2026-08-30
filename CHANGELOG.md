@@ -38,6 +38,41 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `saas-research-to-prototype`) were already within those limits and are
   unchanged.
 
+- **New skill: `delegating-to-codex`.** Decides whether to hand a task to the
+  OpenAI Codex CLI instead of running it in the current session, and how to run
+  it when the answer is yes. Most of the skill exists to say no: it opens with
+  measured numbers showing that delegation is usually the wrong call.
+
+  The routing rules are grounded in a three-arm experiment (same three tasks run
+  by Claude directly, by a Claude subagent, and by `codex exec`) rather than in
+  intuition. Measured token consumption:
+
+  | task | direct | subagent | Codex |
+  |---|---|---|---|
+  | 21 files, 1,215 lines | 12,480 | 45,588 | 204,149 |
+  | 4 files, 40KB | 11,512 | 50,257 | 164,926 |
+  | 1 file, 110 lines | 1,038 | 35,751 | 99,076 |
+
+  Three findings drive the skill's content. Reading one small file costs 34x
+  more via subagent and 95x more via Codex than just reading it. Parent-context
+  savings are effectively identical between subagent (~2,000 returned) and Codex
+  (~1,400) on the largest task, so context savings alone do not justify
+  delegation. And Codex spent 3.6x the total tokens for the same three tasks,
+  because it re-runs search commands -- delegation moves quota consumption
+  rather than reducing it.
+
+  The skill therefore permits delegation only when Claude's own usage limit is
+  the binding constraint, when a second model's review is genuinely wanted
+  (`codex exec review --uncommitted`), or when a long task should run alongside
+  other work. Write delegation is explicitly out of scope; read-only with an
+  explicit `--sandbox read-only` is the documented path, verified to produce
+  zero file modifications in the experiment.
+
+  Also documents the fixed ~22,000-token overhead per `codex exec` call, that
+  `error` items are not necessarily failures, and that injecting `-c notify=`
+  per job (as some third-party orchestrators do) overwrites a user's existing
+  `~/.codex/config.toml` notify hook.
+
 ### Breaking changes
 
 - **`scripts/setup/doctor.sh` now returns a real exit code.** It previously

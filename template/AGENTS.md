@@ -15,6 +15,7 @@ AIは設計・実装・レビュー・記録を支援する開発メンバーと
 | 設計判断を記録する | `skills/recording-decisions/SKILL.md` |
 | コードをレビューする | `skills/reviewing-changes/SKILL.md` |
 | 長時間・複数セッションの作業を回す | `skills/running-loops/SKILL.md` |
+| Claude の枠が逼迫、または別モデルにレビューさせたい | `skills/delegating-to-codex/SKILL.md` |
 
 ## 1. 正本の順序
 
