@@ -7,6 +7,62 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`packs/codex/` -- the mechanical half of Codex delegation.** The
+  `delegating-to-codex` skill already decided *when* to delegate and what to
+  require back, and its report contract says `status`, `files_modified`, and
+  command exit codes must be derived mechanically rather than believed. Prose
+  cannot make that true. Assembled by hand each time, those three fields
+  quietly revert to the delegate's self-report -- which is the one thing the
+  contract exists to prevent. This is the same two-layer split the repository
+  already uses for git governance (`AGENTS.md` §9): the skill asks, the pack
+  enforces.
+
+  `scripts/codex/delegate.sh` runs one read-only investigation and returns a
+  report where `status` comes from the process exit code, `files_modified`
+  comes from comparing `git rev-parse HEAD` and `git status --porcelain`
+  before and after, and `commands` with their exit codes are parsed out of the
+  JSONL event stream. `report-schema.json` is passed to `--output-schema`, so
+  the model's `claims` come back with a `confirmed | falsified | uncertain`
+  status enforced by the tool rather than requested in prose. The full log is
+  written to a file and only its path is returned.
+  `scripts/codex/review.sh` wraps `codex exec review` the same way.
+
+  Three findings came out of building it, each verified against the real CLI
+  rather than assumed:
+
+  - **`codex exec` hangs on stdin.** Even with the prompt passed as an
+    argument, invoking it from a non-interactive parent enters an input wait.
+    Measured at 6m40s with no output and no error -- it presents as a hang,
+    not a failure, so nothing detects it. Both scripts redirect `</dev/null`.
+  - **`error` items are not failures.** A healthy run emits one carrying
+    "Skill descriptions were shortened to fit the 2% skills context budget."
+    Deciding status from the presence of `error` items reports working runs as
+    broken, so status is taken from the exit code alone. The notices are still
+    surfaced, never swallowed.
+  - **The fixed overhead is larger than previously recorded.** Reading a single
+    one-line `VERSION` file cost 43,826 input tokens (22,272 cached). The
+    skill's routing table is updated with the measurement.
+
+  The sandbox is `read-only` and cannot be overridden. Beyond the flag, the
+  scripts verify the invariant themselves: if the tree changed, they exit 3
+  and emit no report rather than returning results from a run whose sandbox
+  did not hold.
+
+  Missing `codex` or `python3` exits 2. The scripts refuse rather than degrade,
+  because a delegation path that silently becomes something weaker is worse
+  than one that stops.
+
+- **`tests/regression/cases/50_codex_pack.sh`** -- 21 assertions driving
+  `delegate.sh` against a *fake* `codex` on PATH, so every branch is covered
+  deterministically and without consuming real quota: refusal when `codex` is
+  absent, success despite an advisory `error` item, a non-zero inner command
+  counted rather than hidden, a non-zero Codex exit propagated, and a write
+  under `read-only` producing exit 3 with no success report. It also asserts
+  that `--sandbox read-only` and `--output-schema` are actually on the command
+  line, rather than trusting the script's own description of itself.
+
+
+
 - **Skill evals: 27 scenarios across all 9 skills, plus a contract check that
   runs in CI.** The official Agent Skills guidance says to write evaluations
   *before* writing extensive documentation, and the reason holds here: writing

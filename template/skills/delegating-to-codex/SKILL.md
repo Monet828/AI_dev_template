@@ -10,6 +10,12 @@ Codex は**別クォータ・別モデルの実行系**であって、Claude の
 
 `codex` が PATH にあり `codex --login` 済みであること。無ければ委譲しない。
 
+> [!important] `codex` pack が入っているなら、生の `codex exec` を叩かない
+> `./scripts/codex/delegate.sh` と `./scripts/codex/review.sh` を使う。
+> §3 が「機械的に決めろ」と書いている status / `files_modified` /
+> コマンドの exit code は、そこで実装されている。手で叩くと**その3つが
+> 委譲先の自己申告に戻る**。pack が無い場合だけ、§3 を手で組み立てる。
+
 ## 1. 委譲の判断
 
 ### 実測（3タスク × 3方式、2026-08-30）
@@ -155,10 +161,14 @@ codex exec --sandbox read-only --cd <repo> "<task>"
 
 ## 7. 既知の落とし穴
 
-- **固定オーバーヘッド 約22,000トークン。** 自明なプロンプトでもかかる（Codex 側の
-  skill/plugin 定義が毎回載る）。軽いタスクほど割に合わない。`~/.codex/skills/` の
-  未使用 skill を無効化すると下がる。
+- **固定オーバーヘッドが大きい。** 実測で `VERSION` 1ファイルを読ませただけで
+  input 43,826 トークン（うち cached 22,272）。Codex 側の skill/plugin 定義が毎回載る。
+  **軽いタスクほど割に合わない。** `~/.codex/skills/` の未使用 skill を無効化すると下がる。
 - **初回が遅い。** 実測で初回 10.9秒、以降 4〜7秒。連続で投げる方が効率が良い。
+- **`codex exec` は stdin を待って無限に止まる。** プロンプトを引数で渡していても、
+  非対話の親プロセスから呼ぶと入力待ちに入る。実測で 6分40秒待っても返らなかった。
+  **エラーではなくハングなので、失敗として検知できない。** 自動化するときは
+  `</dev/null` を必ず付ける（`delegate.sh` は付けている）。
 - **`error` item は失敗とは限らない。** "Skill descriptions were shortened" のような
   警告も `error` として出る。**`error` の有無で status を決めない。**
 - **`~/.codex/config.toml` の `notify` を上書きしない。** ジョブごとに `-c notify=` を
