@@ -1,27 +1,20 @@
 ---
 name: delegating-to-codex
-description: Decide whether to hand a task to the OpenAI Codex CLI instead of doing it in this session, and how to run it if so. Covers the measured cost of delegation, the cases where it pays and the larger number where it does not, cross-review via `codex exec review`, sandbox selection, and how to receive results without undoing the context savings. Use when Claude's usage limit is close, when a second model's review is wanted, or when considering delegating investigation or implementation work to Codex.
+description: Delegate work to the OpenAI Codex CLI as a second execution backend with its own quota and its own model. Covers when delegation pays and the larger number of cases where it does not, the task contract to hand over, the report contract to require back, cross-review via `codex exec review`, parallel dispatch, and error recovery. Use when Claude's usage limit is the binding constraint, when a second model's review is wanted, or when a long investigation should run alongside other work.
 ---
 
 # Codex への委譲
 
-`codex exec` は Codex CLI を非対話で走らせる。別アカウント・別クォータのモデルに
-仕事を渡せるが、**ほとんどの場合は渡さない方が速く安い**。この skill は主に
-「渡さない」判断をするためにある。
+Codex は**別クォータ・別モデルの実行系**であって、Claude の代替ではない。
+この skill は「いつ渡すか」「何を渡すか」「何を返させるか」を決める。
 
-## 前提
+`codex` が PATH にあり `codex --login` 済みであること。無ければ委譲しない。
 
-`codex` が PATH にあり `codex --login` 済みであること。未導入なら委譲しない。
+## 1. 委譲の判断
 
-```bash
-codex --version    # 導入と疎通の確認
-```
+### 実測（3タスク × 3方式、2026-08-30）
 
-## まず: 委譲しない理由の方が多い
-
-実測（3タスク × 3方式、akibako-agent リポジトリ、2026-08-30）:
-
-| タスク | 自分で読む | Claude subagent | Codex 委譲 |
+| タスク | 自分で読む | Claude subagent | Codex |
 |---|---|---|---|
 | 21ファイル 1,215行 | 12,480 | **45,588** | **204,149** |
 | 4ファイル 40KB | 11,512 | **50,257** | **164,926** |
@@ -29,49 +22,123 @@ codex --version    # 導入と疎通の確認
 
 単位は消費トークン。太字は委譲先の内部消費。
 
-読み取れること:
-
-- **1ファイル読むだけなら自分で読む。** subagent で34倍、Codex で95倍のトークンを払う。
-- **親 context の節約なら subagent で足りる。** 21ファイルのタスクで、親に返ったのは
-  subagent 約2,000 / Codex 約1,400。差は5ポイントで、委譲の手間に見合わない。
-- **Codex は同じ仕事に 3.6倍のトークンを使った**（合計 468,151 対 131,596）。
-  探索コマンドを何度も走らせるため。**総量は増える。**
-
 > [!important] 委譲は「節約」ではなく「移転」
-> Codex に渡してもトークン総量は減らない。減るのは *Claude 側の* 消費だけ。
-> これが価値になるのは、Claude の枠が実際に逼迫しているときに限られる。
+> Codex は同じ3タスクに **3.6倍**のトークンを使った（468,151 対 131,596）。
+> 探索コマンドを何度も走らせるため。減るのは *Claude 側の*消費だけで、総量は増える。
 
-## 委譲してよい条件
+### 振り分け
 
-以下の**いずれか**を満たすときだけ。満たさないなら自分でやるか subagent を使う。
+| 状況 | 送り先 |
+|---|---|
+| 1〜2ファイルの確認 | **自分で読む**（委譲は34〜95倍のトークンを払う） |
+| context を節約したい | **Claude subagent**（親への返却は Codex とほぼ同じ。実測で差5ポイント） |
+| **Claude の枠が逼迫・到達** | **Codex**（作業を止めないための退避） |
+| **別モデルのレビューが欲しい** | **Codex**（§4） |
+| **長時間かかり、並行して別作業をしたい** | **Codex**（§5） |
+| 書き込みを伴う実装 | **委譲しない**（§6） |
 
-1. **Claude の利用上限が近い、または到達した** — 作業を止めないための退避
-2. **別モデルの視点でレビューさせたい** — 同じモデルの self-review では見えない指摘を得る
-3. **長時間かかり、その間に別の作業を進めたい** — 数分かかる調査を投げて並行する
+**「念のため」「一応」では委譲しない。** 上の3つのどれかに当てはまるときだけ。
 
-満たさない典型例:
+## 2. 渡す契約（task）
 
-- 1〜2ファイルの確認 → 自分で読む
-- context を節約したいだけ → **subagent を使う**（実測で同等、かつ速い）
-- 「念のため」「一応」 → 委譲しない
+プロンプトに以下を書く。**書かないと Codex は埋めない。**
 
-## 使い方
+```text
+[目的]     何を明らかにする / 何を作るか
+[対象]     読んでよいパス。触ってはいけないもの
+[報告形式] §3 の項目を明示的に列挙する
+[反証条件] 「見つからなければ、無いと明言せよ」  ← 必須
+[出典]     ファイルパスと行番号を要求する
+```
 
-### cross-review（最も価値が高い用途）
+`[反証条件]` を省くと**無いものをでっち上げる余地が残る**。実測でも、これを入れた
+タスクでは「バグは見つからなかった」と正直に返ってきた。
+
+### なぜ Codex に振ったかを残す
+
+委譲を決めたら、その理由を一行で残す（`memory/sessions/` か作業ログ）。
+
+```text
+routing: codex / 理由: Claude 5h枠が80%超。read-only調査なので退避先として適切
+```
+
+後から「なぜこれは委譲したのか」を再構成できないと、振り分け規則を改善できない。
+
+## 3. 返させる契約（report）
+
+要約だけでは検証できず、全文を読むと節約が消える。**この中間を要求する。**
+
+| 項目 | 誰が作るか |
+|---|---|
+| `status` | 終了状態から**機械的に**（`error` item の有無で判定しない。§7参照） |
+| `files_modified` | **機械的に**。Codex の自己申告を使わない |
+| `commands` + exit code | **機械的に**。テスト結果はここから読む |
+| `summary` | Codex（3文以内） |
+| `risks` / `unresolved` | Codex |
+| `claims` | Codex（下記） |
+| 詳細ログ | **パスのみ**。既定では読まない |
+
+### claims — 反証は失敗ではない
+
+判断を左右する主張を**最大3件**、状態つきで返させる。
+
+```text
+claim:    "重複書き込みが起きている"
+status:   confirmed | falsified | uncertain
+evidence: "330組すべて supersedes による正規動作。raw と logical の混同だった"
+```
+
+**`falsified` から修正タスクを作らない。** 誤った前提を潰したこと自体が成果であり、
+そこで打ち切る。Codex が前提を反証して戻ってきたら、それは成功した委譲である。
+
+> [!warning] 「テストが通った」を信じない
+> Codex が通ったと書いていても、**自分で確認するまで通ったことにしない**
+> （`AGENTS.md` §3 / §4）。委譲先の自己申告は「著者の主張」であって検証済みの
+> 事実ではない。`commands` の exit code を見るか、自分で再実行する。
+
+## 4. cross-review
 
 専用サブコマンドがある。プロンプトを書く必要はない。
 
 ```bash
-codex exec review --uncommitted          # 未コミットの変更（staged/unstaged/untracked）
-codex exec review --base main            # main との差分
-codex exec review --commit <SHA>         # 特定コミット
+codex exec review --uncommitted     # 未コミットの変更
+codex exec review --base main       # main との差分
+codex exec review --commit <SHA>    # 特定コミット
 ```
 
-自分のレビューを終えた**後**に走らせ、**指摘が重なるか分かれるか**を見る。
-重なれば確度が上がり、分かれた指摘は個別に判断する。Codex の指摘を無条件に
-採用しない。
+**自分のレビューを終えた後に走らせる。** 先に走らせると自分の判断が引きずられる。
 
-### read-only の調査
+- **重なった指摘** → 確度が上がる。優先して対処
+- **分かれた指摘** → 個別に判断。Codex が正しいとは限らない
+- **Codex だけが挙げた指摘** → 自分が見落とした観点か、誤読か。根拠を確認してから採否
+
+無条件に採用しない。§3 と同じで、これも「著者の主張」である。
+
+## 5. 並列で投げる
+
+独立した調査が複数あるときだけ。依存があるなら順に投げる。
+
+```bash
+codex exec --sandbox read-only --cd <repo> "調査A" > /tmp/a.md &
+codex exec --sandbox read-only --cd <repo> "調査B" > /tmp/b.md &
+wait
+```
+
+**投げたら統合するまでが一手。** 結果を並べて、矛盾があれば矛盾として記録する
+（片方を黙って捨てない）。
+
+### 続きから再開する
+
+```bash
+codex exec resume --last "<follow-up>"
+codex exec resume <SESSION_ID> "<follow-up>"
+```
+
+新しいセッションを立て直すより安い。**同じプロンプトで再試行しない**（§8）。
+
+## 6. 書き込みを伴う委譲
+
+**やらない。read-only に留める。**
 
 ```bash
 codex exec --sandbox read-only --cd <repo> "<task>"
@@ -80,68 +147,40 @@ codex exec --sandbox read-only --cd <repo> "<task>"
 `--sandbox read-only` を**必ず付ける**。実測で `files_modified` が0件になることを
 確認済み。付け忘れると既定のサンドボックス設定が使われる。
 
-タスク文の書き方:
+書き込みを許すと、同じ作業ツリーを自分と Codex が同時に触る危険、中途半端な変更の
+残留、ロールバック手段、diff の検証手順がすべて必要になる。read-only にはどれも要らない。
 
-- 何を読むか、何を報告するかを具体的に書く
-- **「見つからなければ、無いと明言せよ」を入れる** — 入れないと、無いものを
-  でっち上げる余地が残る
-- 出典（ファイルパス・行番号）を要求する
+**どうしても必要になったら**: 専用の git worktree を切り、そこだけを書き込み可能に
+する。`main` を Codex に触らせない。マージは人間が行う（`AGENTS.md` §8）。
 
-### 構造化出力が欲しいとき
+## 7. 既知の落とし穴
 
-```bash
-codex exec --output-schema schema.json --sandbox read-only "<task>"
-```
-
-最終応答を JSON Schema に従わせる。要約を機械処理したいときだけ使う。
-
-### 続きから再開する
-
-```bash
-codex exec resume --last "<follow-up>"      # 直近のセッション
-codex exec resume <SESSION_ID> "<follow-up>"
-```
-
-## 結果の受け取り方
-
-> [!warning] 全文を読むと委譲の意味が消える
-> `codex exec` の出力全体を context に流し込むと、節約したはずの分を
-> その場で使い切る。
-
-- **既定は最終応答だけを読む。** 途中の探索ログは読まない。
-- 長い出力はファイルへリダイレクトし、**必要な箇所だけ**を読む。
-- Codex が「テストが通った」と書いていても、**自分で確認するまで通ったことにしない**
-  （`AGENTS.md` §3 / §4）。委譲先の自己申告は「著者の主張」であって検証済みの事実ではない。
-
-```bash
-codex exec --sandbox read-only "<task>" > /tmp/codex-out.md
-# 必要な部分だけ読む
-```
-
-## 書き込みを伴う委譲
-
-MVP では**やらない**。read-only だけに留める。
-
-理由: 書き込みを許すと、同じ作業ツリーを自分と Codex が同時に触る危険、中途半端な
-変更の残留、ロールバック手段、diff の検証手順がすべて必要になる。read-only には
-どれも要らない。
-
-どうしても必要なら、**専用の git worktree を切ってそこだけを書き込み可能にする**。
-`main` を Codex に触らせない。マージは人間が行う（`AGENTS.md` §8）。
-
-## 既知の落とし穴
-
-- **固定オーバーヘッドがある。** 自明なプロンプトでも input 約22,000トークン
-  （Codex 側の skill/plugin 定義が毎回載るため）。軽いタスクほど割に合わない。
-  `~/.codex/skills/` の未使用 skill を無効化すると下がる。
-- **初回は遅い。** 実測で初回 10.9秒、以降 4〜7秒。連続で投げる方が効率が良い。
+- **固定オーバーヘッド 約22,000トークン。** 自明なプロンプトでもかかる（Codex 側の
+  skill/plugin 定義が毎回載る）。軽いタスクほど割に合わない。`~/.codex/skills/` の
+  未使用 skill を無効化すると下がる。
+- **初回が遅い。** 実測で初回 10.9秒、以降 4〜7秒。連続で投げる方が効率が良い。
 - **`error` item は失敗とは限らない。** "Skill descriptions were shortened" のような
-  警告も `error` として出る。終了状態で判定すること。
-- **`~/.codex/config.toml` の `notify` を上書きしない。** 一部の委譲ツールは
-  ジョブごとに `-c notify=` を注入するが、既存の連携を壊す。
+  警告も `error` として出る。**`error` の有無で status を決めない。**
+- **`~/.codex/config.toml` の `notify` を上書きしない。** ジョブごとに `-c notify=` を
+  注入する third-party ツールがあるが、既存の連携を壊す。
+- **`--output-schema <FILE>`** で最終応答を JSON Schema に従わせられる。要約を機械
+  処理したいときだけ使う。
+
+## 8. うまくいかないとき
+
+| 症状 | 対処 |
+|---|---|
+| 見当違いの方向へ進んだ | **同じプロンプトで再試行しない。** 何が違ったかを足して投げ直す |
+| 出力が長すぎる | ファイルへリダイレクトし、必要な箇所だけ読む |
+| 途中で止まった | `codex exec resume --last` で続ける |
+| 何度やっても失敗する | **タスクが大きすぎる。** 分割するか、自分でやる |
+| 結果が信用できない | 委譲をやめる。検証コストが節約を上回っている |
+
+**同じ失敗を3回繰り返したら、やり方が間違っている**（`skills/running-loops/SKILL.md`
+の retry_budget と同じ判断）。
 
 ## 関連
 
-- 委譲するか自分でやるかの前段の判断 → `skills/session-bootstrap/SKILL.md`
-- 受け取った指摘をどう扱うか → `skills/reviewing-changes/SKILL.md`
+- 委譲するか自分でやるかの前段 → `skills/session-bootstrap/SKILL.md`
+- 受け取った指摘の扱い → `skills/reviewing-changes/SKILL.md`
 - 事実と解釈を混ぜない原則 → `AGENTS.md` §3

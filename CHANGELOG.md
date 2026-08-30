@@ -73,6 +73,15 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   per job (as some third-party orchestrators do) overwrites a user's existing
   `~/.codex/config.toml` notify hook.
 
+  Structurally the skill borrows from three existing orchestrators rather than
+  inventing a shape: the task/report contract and the "a refuted premise is a
+  successful result, not a bug to fix" rule come from `h-wata/squad`'s
+  `task.yaml` / `report.yaml`; parallel dispatch and the error-recovery table
+  come from `kingbootoshi/codex-orchestrator`. What is not borrowed is the
+  routing: those tools delegate by default, and the measurements above say
+  that is wrong for this template's usage, so the routing table sends most
+  work back to reading directly or to a Claude subagent.
+
 ### Breaking changes
 
 - **`scripts/setup/doctor.sh` now returns a real exit code.** It previously
