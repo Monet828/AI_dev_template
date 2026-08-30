@@ -5,6 +5,83 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] -- hardening pass (targeting 0.2.0)
 
+### Changed
+
+- **`template/AGENTS.md` split for progressive disclosure: 415 lines -> 108.**
+  AGENTS.md is injected into context on every single turn, so its size is a
+  standing tax on every task regardless of what the task is. It had grown to
+  ~4,600 tokens, of which roughly two thirds were procedures only needed at
+  specific moments (how to write to `memory/`, how to run a long loop, how to
+  scope a session) rather than rules that must hold at all times.
+
+  The rules that must always hold stayed in AGENTS.md: source-of-truth order,
+  implementation conventions, fact/interpretation separation, verification,
+  standard commands, prohibitions, stop conditions, and git governance. The
+  procedures moved into five new skills under `template/skills/`, loaded only
+  when relevant:
+
+  - `managing-memory` -- what goes in `memory/*`, and the promotion ladder to `docs/`
+  - `session-bootstrap` -- what to read at start, goal-bounded autonomy, closing a session
+  - `recording-decisions` -- required elements of a design decision, and where it lives
+  - `reviewing-changes` -- review checklist and how to report findings
+  - `running-loops` -- loop state, step/retry budgets, `Resume From` handoffs
+
+  Standing context cost drops from ~4,614 to ~2,441 tokens (-47%), counting the
+  five new skill descriptions that are preloaded at startup. No content was
+  deleted; it was relocated and, in places, tightened.
+
+  All five skills conform to Anthropic's published Agent Skills limits: `name`
+  <= 64 chars (lowercase/digits/hyphens), `description` <= 1,024 chars, body
+  under 500 lines, and references kept one level deep from SKILL.md.
+
+  Existing skills (`code-review`, `evidence-first-repro`,
+  `saas-research-to-prototype`) were already within those limits and are
+  unchanged.
+
+- **New skill: `delegating-to-codex`.** Decides whether to hand a task to the
+  OpenAI Codex CLI instead of running it in the current session, and how to run
+  it when the answer is yes. Most of the skill exists to say no: it opens with
+  measured numbers showing that delegation is usually the wrong call.
+
+  The routing rules are grounded in a three-arm experiment (same three tasks run
+  by Claude directly, by a Claude subagent, and by `codex exec`) rather than in
+  intuition. Measured token consumption:
+
+  | task | direct | subagent | Codex |
+  |---|---|---|---|
+  | 21 files, 1,215 lines | 12,480 | 45,588 | 204,149 |
+  | 4 files, 40KB | 11,512 | 50,257 | 164,926 |
+  | 1 file, 110 lines | 1,038 | 35,751 | 99,076 |
+
+  Three findings drive the skill's content. Reading one small file costs 34x
+  more via subagent and 95x more via Codex than just reading it. Parent-context
+  savings are effectively identical between subagent (~2,000 returned) and Codex
+  (~1,400) on the largest task, so context savings alone do not justify
+  delegation. And Codex spent 3.6x the total tokens for the same three tasks,
+  because it re-runs search commands -- delegation moves quota consumption
+  rather than reducing it.
+
+  The skill therefore permits delegation only when Claude's own usage limit is
+  the binding constraint, when a second model's review is genuinely wanted
+  (`codex exec review --uncommitted`), or when a long task should run alongside
+  other work. Write delegation is explicitly out of scope; read-only with an
+  explicit `--sandbox read-only` is the documented path, verified to produce
+  zero file modifications in the experiment.
+
+  Also documents the fixed ~22,000-token overhead per `codex exec` call, that
+  `error` items are not necessarily failures, and that injecting `-c notify=`
+  per job (as some third-party orchestrators do) overwrites a user's existing
+  `~/.codex/config.toml` notify hook.
+
+  Structurally the skill borrows from three existing orchestrators rather than
+  inventing a shape: the task/report contract and the "a refuted premise is a
+  successful result, not a bug to fix" rule come from `h-wata/squad`'s
+  `task.yaml` / `report.yaml`; parallel dispatch and the error-recovery table
+  come from `kingbootoshi/codex-orchestrator`. What is not borrowed is the
+  routing: those tools delegate by default, and the measurements above say
+  that is wrong for this template's usage, so the routing table sends most
+  work back to reading directly or to a Claude subagent.
+
 ### Breaking changes
 
 - **`scripts/setup/doctor.sh` now returns a real exit code.** It previously
