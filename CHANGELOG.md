@@ -7,7 +7,8 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **`packs/codex/` -- the mechanical half of Codex delegation.** The
+- **`template/scripts/codex/` -- the mechanical half of Codex delegation, as
+  standard equipment.** The
   `delegating-to-codex` skill already decided *when* to delegate and what to
   require back, and its report contract says `status`, `files_modified`, and
   command exit codes must be derived mechanically rather than believed. Prose
@@ -26,6 +27,16 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   status enforced by the tool rather than requested in prose. The full log is
   written to a file and only its path is returned.
   `scripts/codex/review.sh` wraps `codex exec review` the same way.
+
+  These ship in `template/`, not as an opt-in pack. The `delegating-to-codex`
+  skill was already standard equipment in every generated project, and pairing
+  a rule that ships everywhere with an implementation that ships only on
+  request produces the worst arrangement: the contract is always in context
+  telling the agent those fields must be mechanical, while the thing that makes
+  them mechanical is usually absent. `AGENTS.md` gains two lines in the
+  standard-commands section and one stop condition (a `delegate.sh` exit 3 --
+  files changed under a read-only sandbox -- means stop and report, not
+  interpret the result).
 
   Three findings came out of building it, each verified against the real CLI
   rather than assumed:
@@ -52,14 +63,15 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   because a delegation path that silently becomes something weaker is worse
   than one that stops.
 
-- **`tests/regression/cases/50_codex_pack.sh`** -- 21 assertions driving
+- **`tests/regression/cases/50_codex_delegation.sh`** -- 23 assertions driving
   `delegate.sh` against a *fake* `codex` on PATH, so every branch is covered
   deterministically and without consuming real quota: refusal when `codex` is
   absent, success despite an advisory `error` item, a non-zero inner command
   counted rather than hidden, a non-zero Codex exit propagated, and a write
   under `read-only` producing exit 3 with no success report. It also asserts
   that `--sandbox read-only` and `--output-schema` are actually on the command
-  line, rather than trusting the script's own description of itself.
+  line, rather than trusting the script's own description of itself. It also
+  asserts the scripts reach a project scaffolded with no pack flags at all.
 
 
 

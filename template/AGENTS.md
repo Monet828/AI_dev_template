@@ -75,7 +75,9 @@ context window は共有資源であり、一度入れたものは会話が続�
 `./scripts/hooks/{pre-task,post-task,stop,save-memory}.sh` /
 `./scripts/loop/verify.sh`（実チェック。`[PASS]/[SKIP]/[FAIL]`）/
 `./scripts/loop/record-verification.sh`（自己申告ログ。verify.sh 実行後に記録）/
-`./scripts/loop/resume.sh`
+`./scripts/loop/resume.sh` /
+`./scripts/codex/delegate.sh`（Codex への read-only 委譲。**生の `codex exec` を叩かない**）/
+`./scripts/codex/review.sh`（別モデルによるレビュー）
 
 ## 7. 禁止事項
 
@@ -99,6 +101,8 @@ context window は共有資源であり、一度入れたものは会話が続�
 - **破壊的変更・不可逆操作・大規模リファクタリング**が必要になったとき
 - **本番影響・認証・課金・権限・秘密情報**に関わるとき
 - 妥当な検証手段がなく、安全に完了とみなせないとき
+- **`delegate.sh` が exit 3 を返したとき**（read-only のはずが変更が出た）。
+  返ってきた内容を信用せず、止まって報告する
 
 ## 9. Git 運用ガバナンス
 
