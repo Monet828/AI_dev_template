@@ -151,7 +151,7 @@ codex exec --sandbox read-only --cd <repo> "<task>"
 残留、ロールバック手段、diff の検証手順がすべて必要になる。read-only にはどれも要らない。
 
 **どうしても必要になったら**: 専用の git worktree を切り、そこだけを書き込み可能に
-する。`main` を Codex に触らせない。マージは人間が行う（`AGENTS.md` §8）。
+する。`main` を Codex に触らせない。マージは人間が行う（`AGENTS.md` §9）。
 
 ## 7. 既知の落とし穴
 
