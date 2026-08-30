@@ -5,6 +5,39 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] -- hardening pass (targeting 0.2.0)
 
+### Changed
+
+- **`template/AGENTS.md` split for progressive disclosure: 415 lines -> 108.**
+  AGENTS.md is injected into context on every single turn, so its size is a
+  standing tax on every task regardless of what the task is. It had grown to
+  ~4,600 tokens, of which roughly two thirds were procedures only needed at
+  specific moments (how to write to `memory/`, how to run a long loop, how to
+  scope a session) rather than rules that must hold at all times.
+
+  The rules that must always hold stayed in AGENTS.md: source-of-truth order,
+  implementation conventions, fact/interpretation separation, verification,
+  standard commands, prohibitions, stop conditions, and git governance. The
+  procedures moved into five new skills under `template/skills/`, loaded only
+  when relevant:
+
+  - `managing-memory` -- what goes in `memory/*`, and the promotion ladder to `docs/`
+  - `session-bootstrap` -- what to read at start, goal-bounded autonomy, closing a session
+  - `recording-decisions` -- required elements of a design decision, and where it lives
+  - `reviewing-changes` -- review checklist and how to report findings
+  - `running-loops` -- loop state, step/retry budgets, `Resume From` handoffs
+
+  Standing context cost drops from ~4,614 to ~2,441 tokens (-47%), counting the
+  five new skill descriptions that are preloaded at startup. No content was
+  deleted; it was relocated and, in places, tightened.
+
+  All five skills conform to Anthropic's published Agent Skills limits: `name`
+  <= 64 chars (lowercase/digits/hyphens), `description` <= 1,024 chars, body
+  under 500 lines, and references kept one level deep from SKILL.md.
+
+  Existing skills (`code-review`, `evidence-first-repro`,
+  `saas-research-to-prototype`) were already within those limits and are
+  unchanged.
+
 ### Breaking changes
 
 - **`scripts/setup/doctor.sh` now returns a real exit code.** It previously
