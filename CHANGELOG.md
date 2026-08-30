@@ -82,6 +82,41 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   that is wrong for this template's usage, so the routing table sends most
   work back to reading directly or to a Claude subagent.
 
+- **`template/AGENTS.md` gains a section on not flooding context** (new §5;
+  later sections renumbered, and the three skill cross-references into
+  AGENTS.md were re-checked against the new numbering). Long output goes to a
+  file and is read back selectively; failed runs are read from the tail;
+  exploration goes to a subagent. The subagent point carries the measurement
+  that justifies it — 21 files investigated cost 45,588 tokens inside the
+  subagent and returned about 2,000 to the parent.
+
+- **`template/agents/researcher.md` gains a "how to report back" section.**
+  The role previously defined what to collect but not what to return, which
+  left the context firewall to chance: a researcher that pastes its search
+  output into the parent has done nothing except add a hop. It now requires
+  conclusions rather than logs, `path:line` citations instead of quoted
+  bodies, an explicit "not found" rather than a silent omission or a
+  near-miss substitute, and the same read-it-versus-verified-it distinction
+  AGENTS.md §3 requires.
+
+- **`evidence-first` pack gains an Evidence Card** at
+  `docs/templates/evidence-card.md`, required before filing work whose
+  premise is an observed number (log/metric aggregates, DB counts and
+  inventories). Seven fields: the claim, when it was observed, the data
+  window, what the metric actually counts, what a pre-filing check of
+  git log / merged PRs / CHANGELOG / ADRs found, the cheapest way to refute
+  the claim, and what happens to the work if it is refuted.
+
+  The template carries a worked example of a real filing that turned out to
+  be wrong — a "duplicate writes" bug where 132 was a raw row count and 77
+  was a logical count excluding superseded rows, so the gap was two different
+  semantics rather than duplication. Two fields would have caught it before
+  any work started.
+
+  It also states the rule that makes refutation cheap to report: a refuted
+  premise is the successful outcome, the work stops there, and no follow-up
+  fix task is created from it.
+
 ### Breaking changes
 
 - **`scripts/setup/doctor.sh` now returns a real exit code.** It previously
