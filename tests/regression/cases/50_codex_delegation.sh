@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# The codex pack ships the mechanical half of the delegation report contract.
+# The codex scripts are standard equipment in template/, shipped to every
+# generated project. They are the mechanical half of the delegation report
+# contract that skills/delegating-to-codex/SKILL.md defines.
 # These cases drive delegate.sh against a *fake* codex on PATH, so every branch
 # is exercised deterministically and without consuming real Codex quota.
 #
 # What is asserted:
-#   - the pack lands in a generated project and AGENTS.md gains its section
+#   - the scripts land in EVERY generated project, with no pack opt-in
 #   - a missing `codex` refuses (exit 2) instead of degrading
 #   - status comes from the exit code, NOT from the presence of `error` items
 #     (Codex emits those for advisory notices; a healthy run has them)
@@ -28,8 +30,8 @@ TMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/ai-dev-template-test.XXXXXX")"
 trap 'rm -rf "$TMP_ROOT"' EXIT
 
 TARGET="$TMP_ROOT/project"
-if ! "$ROOT_DIR/scripts/setup/scaffold.sh" "$TARGET" --with codex >/dev/null 2>&1; then
-  echo "  FAIL: scaffold.sh --with codex failed"
+if ! "$ROOT_DIR/scripts/setup/scaffold.sh" "$TARGET" >/dev/null 2>&1; then
+  echo "  FAIL: scaffold.sh failed"
   ASSERT_FAILURES=$((ASSERT_FAILURES + 1))
   assert_case_result
 fi
@@ -38,7 +40,9 @@ DELEGATE="$TARGET/scripts/codex/delegate.sh"
 assert_file_exists "$DELEGATE" "delegate.sh is delivered"
 assert_file_exists "$TARGET/scripts/codex/review.sh" "review.sh is delivered"
 assert_file_exists "$TARGET/scripts/codex/report-schema.json" "report-schema.json is delivered"
-assert_contains "$(cat "$TARGET/AGENTS.md")" "Codex 委譲アドオン" "AGENTS.md gains the codex section"
+assert_contains "$(cat "$TARGET/AGENTS.md")" "scripts/codex/delegate.sh" "AGENTS.md lists delegate.sh as a standard command"
+assert_contains "$(cat "$TARGET/AGENTS.md")" "exit 3" "AGENTS.md stop conditions cover a read-only violation"
+assert_file_exists "$TARGET/skills/delegating-to-codex/SKILL.md" "the skill that governs these scripts ships too"
 
 # The generated project is not a git repo; make it one so the read-only
 # invariant check has a tree to compare.

@@ -2,8 +2,8 @@
 
 ## シナリオ
 
-`codex` pack が入ったプロジェクトで、read-only の調査を Codex に委譲すると決めた。
-`./scripts/codex/delegate.sh` が存在する。
+read-only の調査を Codex に委譲すると決めた。`./scripts/codex/delegate.sh` は
+テンプレートの標準装備なので、必ず存在する。
 
 ## 期待する挙動
 

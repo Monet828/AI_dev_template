@@ -10,11 +10,11 @@ Codex は**別クォータ・別モデルの実行系**であって、Claude の
 
 `codex` が PATH にあり `codex --login` 済みであること。無ければ委譲しない。
 
-> [!important] `codex` pack が入っているなら、生の `codex exec` を叩かない
+> [!important] 生の `codex exec` を叩かない
 > `./scripts/codex/delegate.sh` と `./scripts/codex/review.sh` を使う。
 > §3 が「機械的に決めろ」と書いている status / `files_modified` /
 > コマンドの exit code は、そこで実装されている。手で叩くと**その3つが
-> 委譲先の自己申告に戻る**。pack が無い場合だけ、§3 を手で組み立てる。
+> 委譲先の自己申告に戻り**、read-only 不変条件の検査と `</dev/null` も抜ける。
 
 ## 1. 委譲の判断
 
