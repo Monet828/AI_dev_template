@@ -40,6 +40,32 @@ under `template/`.
    ```
 5. Open a PR against `main` describing what changed and why.
 
+## Adding or changing a skill
+
+Skills live at `template/skills/<name>/SKILL.md` and are loaded on demand, so
+only `name` and `description` sit in context by default. That makes the
+frontmatter the load-bearing part: if the description doesn't say *when* to
+reach for the skill, the skill is never read.
+
+**Write the evals before the SKILL.md body.** Evals live at
+`tests/evals/<name>/` (repo root -- they are a skill *author's* tool and never
+ship into a generated project) and there must be at least 3 per skill. Writing
+them first forces you to name the observable difference the skill is supposed
+to make; if you can't name one, the skill isn't ready to be written. See
+`tests/evals/README.md` for the file format and the one rule that matters:
+**an eval that passes without the skill loaded measures nothing.**
+
+`tests/regression/cases/40_skill_contract.sh` enforces the mechanical half of
+this -- frontmatter shape, `name` matching the directory, description size,
+SKILL.md under 500 lines, at least 3 well-formed evals, no orphan eval
+directory, and that every `` `AGENTS.md` §N `` reference resolves to a real
+section. It cannot check whether the skill actually changes behavior; that is
+judged by hand against the evals.
+
+If you renumber a section in `template/AGENTS.md`, run
+`./tests/regression/run.sh` -- the stale `§N` references in skills are exactly
+what case 40 exists to catch.
+
 ## Adding or changing a pack
 
 - A pack lives at `packs/<name>/` with a `pack-manifest.sh` (`PACK_NAME`,

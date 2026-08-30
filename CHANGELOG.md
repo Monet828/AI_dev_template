@@ -5,6 +5,62 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] -- hardening pass (targeting 0.2.0)
 
+### Added
+
+- **Skill evals: 27 scenarios across all 9 skills, plus a contract check that
+  runs in CI.** The official Agent Skills guidance says to write evaluations
+  *before* writing extensive documentation, and the reason holds here: writing
+  an eval forces you to name the observable difference a skill is supposed to
+  make. Until PR #8 the skills had none, so nothing distinguished a skill that
+  changed agent behavior from one that read well.
+
+  Evals live at `tests/evals/<skill>/NN-<slug>.md` -- at the repository root,
+  not under `template/`. They are a tool for the person *writing* a skill, not
+  for an agent working in a generated project, so shipping them would add
+  weight without adding capability. `40_skill_contract.sh` asserts they never
+  leak into a generated project.
+
+  Each eval names four things: the scenario, the expected behavior stated in
+  **observable** terms, the **failing behavior** it is designed to catch, and
+  whether judging it is mechanical or human. The third field is the one that
+  makes the format work, and it carries a hard rule:
+
+  > An eval that passes without the skill loaded measures nothing.
+
+  So the failing behavior has to be a mistake a competent agent would
+  plausibly make by default -- "merges once CI is green", "writes a design
+  decision into `current-state.md`", "trusts a delegated agent's self-reported
+  success over its exit code". An eval whose failure mode is obviously absurd
+  always passes, and is decoration.
+
+- **`tests/regression/cases/40_skill_contract.sh`** -- the mechanically
+  checkable half. Per skill: frontmatter `name` matches `^[a-z0-9-]{1,64}$`
+  and equals the directory name, `description` is present and within the size
+  limit, `SKILL.md` is under 500 lines, and at least 3 well-formed evals
+  exist. Repo-wide: no orphan eval directory, and every `` `AGENTS.md` §N ``
+  reference from a skill resolves to a real section.
+
+  That last check exists because the failure already happened. Renumbering
+  AGENTS.md sections in this same release left two of three skill
+  cross-references pointing at the wrong section; both were found by reading
+  every reference by hand. This case makes that unnecessary.
+
+  The case was mutation-tested rather than assumed to work: deleting an eval,
+  emptying a required section, breaking a section reference, renaming a
+  frontmatter `name`, and adding a skill with no evals each produce exit 1
+  with a specific message, and the baseline returns to 0 afterward.
+
+  **What it does not check is whether a skill works.** A green run means the
+  evals exist and are well-formed. Behavioral evaluation needs an LLM, is
+  nondeterministic, and is judged by hand -- the two are kept separate on
+  purpose (`AGENTS.md` §3).
+
+  One pre-existing problem surfaced and is reported rather than papered over:
+  `template/skills/evidence-first-repro/SKILL.md:157` refers to a `§11` that
+  does not exist in that file. It is emitted as a `WARN` and does not fail the
+  case, because the correct target is unknown and guessing at it would be
+  worse than leaving it visible.
+
 ### Changed
 
 - **`template/AGENTS.md` split for progressive disclosure: 415 lines -> 108.**
