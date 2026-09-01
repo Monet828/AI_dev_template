@@ -7,6 +7,50 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`scripts/codex/discover.sh` and `scripts/codex/dispatch.sh` -- a two-layer
+  design separating when to look from when to spend quota.** Prompted by a
+  concrete question: is it worth firing Codex every 30 minutes so a Plus
+  subscription's idle time isn't wasted? The premise doesn't hold -- Plus
+  costs the same whether it's used or not, and delegation costs 3.6x the
+  tokens of doing the work directly (measured in the `feat(codex)` PR), so
+  filling idle time with low-value work is a net loss, not a gain. What
+  actually paid off in practice was Codex checking a documented claim the
+  author had no reason to go re-check themselves (folder-lens's README stated
+  its secret-file policy was consolidated in one place; the search path had
+  quietly duplicated it and drifted). That's a narrow, falsifiable class of
+  task: does this specific claim hold against this specific code.
+
+  `discover.sh` scans for an `<!-- codex:verify -->` marker followed by a
+  claim, and appends new ones to `memory/codex-queue.jsonl`. **It never calls
+  Codex** -- it only reads files and appends to the queue -- so it's safe to
+  run on any schedule (cron, launchd, every 30 minutes, every 5) with zero
+  quota cost. A claim's id hashes its file path and text, so editing a claim
+  re-queues it under a new id while an unchanged, already-handled one is never
+  queued twice.
+
+  `dispatch.sh --list` shows what's pending; `--next` or `--id <ID>` pops one
+  item, builds a fact-check task (confirm/deny this claim, not "improve this"),
+  and hands it to `delegate.sh`. **This is the only operation that spends
+  quota, and it only runs when a human runs it.** The verdict
+  (`confirmed`/`falsified`/`uncertain`) and evidence are folded back into the
+  queue entry. A `falsified` result is not a failure -- see the existing
+  claims-are-not-failures rule in the skill's report contract.
+
+  `skills/delegating-to-codex/SKILL.md` gains a new section 9 stating the
+  design principle explicitly: **time-drive discovery, never time-drive
+  delegation.** `docs/playbooks/codex-discovery-patrol.md` gives launchd and
+  cron templates for `discover.sh` -- deliberately not for `dispatch.sh`.
+
+  `tests/regression/cases/60_codex_discovery_queue.sh` (21 assertions, fake
+  `codex` on PATH) proves discovery and delegation stay separated: discovery
+  never invokes `codex`, even when one exists on PATH and would exit nonzero
+  if called; a multi-line claim is joined correctly; an unchanged claim isn't
+  re-queued while an edited one is; a failed delegation is recorded as
+  `delegation_failed` rather than silently dropped; a read-only violation
+  during dispatch leaves the queue entry untouched rather than corrupting it.
+
+
+
 - **`template/scripts/codex/` -- the mechanical half of Codex delegation, as
   standard equipment.** The
   `delegating-to-codex` skill already decided *when* to delegate and what to

@@ -77,7 +77,9 @@ context window は共有資源であり、一度入れたものは会話が続�
 `./scripts/loop/record-verification.sh`（自己申告ログ。verify.sh 実行後に記録）/
 `./scripts/loop/resume.sh` /
 `./scripts/codex/delegate.sh`（Codex への read-only 委譲。**生の `codex exec` を叩かない**）/
-`./scripts/codex/review.sh`（別モデルによるレビュー）
+`./scripts/codex/review.sh`（別モデルによるレビュー）/
+`./scripts/codex/discover.sh`（文書化された主張を検証キューへ積む。Codex を呼ばない）/
+`./scripts/codex/dispatch.sh`（キューから1件取り出し、人間が実行したときだけ Codex に委譲する）
 
 ## 7. 禁止事項
 
