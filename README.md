@@ -142,11 +142,6 @@ exclusion pattern that didn't match its own README description).
 Each pack's real version lives in its `pack-manifest.sh` and gets recorded
 into the generated project's `.ai-dev-template.yml`.
 
-`packs/ops/` also exists (a two-tier proto/graduated operating model with a
-graduation checklist) but has no `pack-manifest.sh`, so `scaffold.sh` cannot
-install it yet -- it's reference material, not a working pack. Not listed
-above for that reason.
-
 ## Safety & git workflow
 
 - `scripts/hooks/pre-push` is an **opt-in** pre-push hook that blocks direct

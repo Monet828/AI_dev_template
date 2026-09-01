@@ -323,7 +323,18 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   interactive self-report appended to the session log) is preserved
   unchanged under a new name: `scripts/loop/record-verification.sh`.
 
-### Added
+### Removed
+
+- **`packs/ops/` -- a documented-but-never-wired pack.** It had a README, a
+  graduation checklist, and a maintenance-runbook template describing a
+  reasonable proto/graduated two-tier operating model, but no
+  `pack-manifest.sh`. Confirmed unusable rather than assumed: running
+  `new-project.sh --packs ops` fails with "pack manifest not found". Found
+  while auditing the README against current reality; removed rather than
+  wired up, since nobody had asked for the feature this session -- finishing
+  it would have been scope the user didn't request.
+
+
 
 - `template/` as the generation source root, separated from generator-only
   tooling (`scripts/setup/{scaffold,new-project}.sh`, `packs/`, `tests/`,
