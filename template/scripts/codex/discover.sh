@@ -55,6 +55,7 @@ import hashlib, json, os
 root = os.environ["ROOT_DIR"]
 queue_path = os.environ["QUEUE"]
 matches_path = os.environ["MATCHES_FILE"]
+MARKER = "codex:verify"
 
 existing_ids = set()
 with open(queue_path, encoding="utf-8") as fh:
@@ -89,10 +90,17 @@ with open(matches_path, encoding="utf-8") as fh:
             lines = source.readlines()
 
         # The claim is the run of non-blank lines immediately after the
-        # marker (up to 5 lines), so a claim can wrap without a second marker.
+        # marker (up to 5 lines), so a claim can wrap without a second
+        # marker. It stops at a blank line OR the next marker -- markers are
+        # often adjacent with no blank line between list items, and without
+        # this check a claim would swallow the next marker plus the start of
+        # the next claim (found by running this against a real densely
+        # bulleted README, not by unit-testing in isolation).
         claim_lines = []
         for candidate in lines[lineno:lineno + 5]:
             text = candidate.strip()
+            if MARKER in text:
+                break
             if not text:
                 if claim_lines:
                     break

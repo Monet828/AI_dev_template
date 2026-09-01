@@ -41,6 +41,11 @@ cat >> "$TARGET/README.md" <<'EOF'
 <!-- codex:verify -->
 - claim two:
   wraps onto a second line
+<!-- codex:verify -->
+- claim three: immediately adjacent, no blank line before it
+<!-- codex:verify -->
+- claim four:
+  also adjacent, and also wraps
 EOF
 
 # ---- discover.sh never touches PATH's codex, even if one is present ----
@@ -55,21 +60,33 @@ chmod +x "$FAKE_BIN/codex"
 
 out="$(cd "$TARGET" && PATH="$FAKE_BIN:$PATH" ./scripts/codex/discover.sh 2>&1)"
 assert_not_contains "$out" "CODEX WAS CALLED" "discover.sh never invokes codex, even when present on PATH"
-assert_contains "$out" "2 new candidate" "both markers are found in one pass"
+assert_contains "$out" "4 new candidate" "all four markers are found in one pass, including adjacent ones"
 
 QUEUE="$TARGET/memory/codex-queue.jsonl"
 assert_file_exists "$QUEUE" "the queue file is created"
 LINES="$(wc -l < "$QUEUE" | tr -d '[:space:]')"
-assert_exit_code 2 "$LINES" "two entries are queued"
+assert_exit_code 4 "$LINES" "four entries are queued"
 
 MULTILINE="$(grep 'claim two' "$QUEUE")"
 assert_contains "$MULTILINE" "wraps onto a second line" "a claim wrapping onto the next line is joined"
+
+# Regression: markers with no blank line between them (the common case in a
+# dense bulleted list) must not swallow the next marker plus the start of
+# the next claim. Found by running this against a real README, not caught
+# by the original test, which only used blank-line-separated markers.
+CLAIM_THREE="$(grep 'claim three' "$QUEUE")"
+assert_not_contains "$CLAIM_THREE" "codex:verify" "an adjacent marker is never absorbed into the previous claim text"
+assert_not_contains "$CLAIM_THREE" "claim four" "an adjacent claim never bleeds into the previous one"
+
+CLAIM_FOUR="$(grep 'claim four' "$QUEUE")"
+assert_contains "$CLAIM_FOUR" "also adjacent, and also wraps" "a wrapped claim still joins correctly when adjacent to other markers"
+assert_not_contains "$CLAIM_FOUR" "codex:verify" "the marker itself never leaks into an adjacent wrapped claim"
 
 # ---- re-running discover.sh does not duplicate unchanged claims ----
 out2="$(cd "$TARGET" && ./scripts/codex/discover.sh 2>&1)"
 assert_contains "$out2" "0 new candidate" "an unchanged claim is not re-queued"
 LINES2="$(wc -l < "$QUEUE" | tr -d '[:space:]')"
-assert_exit_code 2 "$LINES2" "the queue is still exactly two entries"
+assert_exit_code 4 "$LINES2" "the queue is still exactly four entries"
 
 # ---- editing a claim's text re-queues it under a new id ----
 sed -i.bak 's/claim one: single line/claim one: edited text/' "$TARGET/README.md"
@@ -78,7 +95,7 @@ assert_contains "$out3" "1 new candidate" "an edited claim is re-queued as a new
 
 # ---- dispatch.sh --list shows only pending items ----
 LIST_BEFORE="$(cd "$TARGET" && ./scripts/codex/dispatch.sh --list 2>&1)"
-assert_contains "$LIST_BEFORE" "3 pending" "list shows all pending items, including the re-queued one"
+assert_contains "$LIST_BEFORE" "5 pending" "list shows all pending items, including the re-queued one"
 
 # fake codex shaped like the real CLI's JSONL, returning a schema-shaped report
 make_fake_codex() {
@@ -102,7 +119,7 @@ assert_exit_code 0 "$?" "a successful dispatch exits 0"
 assert_contains "$out4" "result: falsified" "the verdict from the report is folded back into the queue"
 
 PENDING_AFTER="$(grep -c '"status": "pending"' "$QUEUE" || true)"
-assert_exit_code 2 "$PENDING_AFTER" "exactly one item left pending after one dispatch"
+assert_exit_code 4 "$PENDING_AFTER" "four items left pending after dispatching one of five"
 FALSIFIED_COUNT="$(grep -c '"status": "falsified"' "$QUEUE" || true)"
 assert_exit_code 1 "$FALSIFIED_COUNT" "the dispatched item is now marked falsified"
 
@@ -127,8 +144,15 @@ assert_contains "$(grep "$LAST_PENDING_ID" "$QUEUE")" '"status": "pending"' "the
 rm -f "$TARGET/violation.txt"
 
 # ---- with nothing pending, --next is a no-op, not an error ----
+# Drain whatever is left rather than assuming a fixed count -- the exact
+# number of items still pending here depends on how many earlier steps
+# consumed one, and hardcoding it makes the test brittle to reordering.
 make_fake_codex 0 confirmed
-cd "$TARGET" && PATH="$FAKE_BIN:$PATH" ./scripts/codex/dispatch.sh --next >/dev/null 2>&1
+for _ in $(seq 1 10); do
+  remaining="$(cd "$TARGET" && ./scripts/codex/dispatch.sh --list 2>&1 | tail -1)"
+  case "$remaining" in "-- 0 pending") break ;; esac
+  (cd "$TARGET" && PATH="$FAKE_BIN:$PATH" ./scripts/codex/dispatch.sh --next >/dev/null 2>&1)
+done
 out7="$(cd "$TARGET" && PATH="$FAKE_BIN:$PATH" ./scripts/codex/dispatch.sh --next 2>&1)"
 assert_exit_code 0 "$?" "nothing pending is not treated as an error"
 assert_contains "$out7" "nothing to dispatch" "the empty-queue case says so explicitly"

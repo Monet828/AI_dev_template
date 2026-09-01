@@ -5,7 +5,24 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] -- hardening pass (targeting 0.2.0)
 
-### Added
+### Fixed
+
+- **`scripts/codex/discover.sh` swallowed adjacent claims when markers had no
+  blank line between them.** Found immediately on first real-world use: a
+  densely bulleted README section marks every bullet with
+  `<!-- codex:verify -->` back to back, no blank lines. The claim-absorption
+  loop only stopped at a blank line, so it walked straight through the next
+  marker and into the start of the next claim -- the original regression
+  test only exercised blank-line-separated markers and missed this. The loop
+  now also stops the instant it sees another marker. The test gained four
+  adjacent, mixed single-line/wrapping claims to cover exactly this shape,
+  and its later assertions (queue counts, pending counts) were hardcoded to
+  the old 2-claim baseline and needed updating -- the final "drain to empty"
+  check was also rewritten to actually drain the queue in a loop instead of
+  assuming a fixed remaining count, since that count depends on how many
+  earlier steps happen to consume an item.
+
+
 
 - **`scripts/codex/discover.sh` and `scripts/codex/dispatch.sh` -- a two-layer
   design separating when to look from when to spend quota.** Prompted by a
