@@ -14,6 +14,9 @@
   - 未完了タスク、優先度、状態を管理する
 - `sessions/`
   - 日ごとの作業ログ、Goal / Scope / Stop Conditions、Loop State、Unresolved / Open Questions、Resume From、途中メモを残す
+- `codex-queue.jsonl`
+  - `scripts/codex/discover.sh` / `dispatch.sh` の状態。人間が編集する場所ではない。
+    詳細は `skills/delegating-to-codex/SKILL.md` §9
 
 ## 昇格の目安
 
