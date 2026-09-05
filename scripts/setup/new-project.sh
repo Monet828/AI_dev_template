@@ -10,13 +10,16 @@ Usage:
   ./scripts/setup/new-project.sh <target_dir> [profile]
   ./scripts/setup/new-project.sh <target_dir> --packs pack1,pack2
 
-Profiles:
-  minimal            No packs
-  understand         understand-first
-  research           understand-first,evidence-first
-  strategy           evidence-first,problem-first
-  full               understand-first,evidence-first,problem-first
-  full-slides        understand-first,evidence-first,problem-first,slides
+Profiles (spec-first is included in every profile):
+  minimal            spec-first
+  understand         spec-first,understand-first
+  research           spec-first,understand-first,evidence-first
+  strategy           spec-first,evidence-first,problem-first
+  full               spec-first,understand-first,evidence-first,problem-first
+  full-slides        spec-first,understand-first,evidence-first,problem-first,slides
+
+  --packs overrides the profile entirely, so it is also how you opt *out*
+  of spec-first.
 
 Examples:
   ./scripts/setup/new-project.sh /path/to/new-project
@@ -63,22 +66,22 @@ if [[ -z "$packs" ]]; then
   profile_label="$profile"
   case "$profile" in
     minimal)
-      packs=""
+      packs="spec-first"
       ;;
     understand)
-      packs="understand-first"
+      packs="spec-first,understand-first"
       ;;
     research)
-      packs="understand-first,evidence-first"
+      packs="spec-first,understand-first,evidence-first"
       ;;
     strategy)
-      packs="evidence-first,problem-first"
+      packs="spec-first,evidence-first,problem-first"
       ;;
     full)
-      packs="understand-first,evidence-first,problem-first"
+      packs="spec-first,understand-first,evidence-first,problem-first"
       ;;
     full-slides)
-      packs="understand-first,evidence-first,problem-first,slides"
+      packs="spec-first,understand-first,evidence-first,problem-first,slides"
       ;;
     *)
       echo "[error] unknown profile: $profile" >&2
