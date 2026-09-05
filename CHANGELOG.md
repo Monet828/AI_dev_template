@@ -5,6 +5,44 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] -- hardening pass (targeting 0.2.0)
 
+### Added
+
+- **`spec-first` pack, in every profile.** Approving a spec is meant to be the
+  start of any task, so it is not an opt-in extra: `minimal` now means
+  `spec-first` rather than no packs, and `--packs` is the way to opt *out*.
+  The pack ships `docs/specs/`, `docs/approvals/`, `docs/templates/spec-lite.md`,
+  `docs/templates/spec-full/`, `scripts/workflows/spec-first.sh`, and a 28-line
+  `AGENTS.md` fragment.
+
+  The design splits two goals that are easy to conflate and have different
+  solutions: **A, that the user actually understands what is being built**
+  (solved by dialogue -- the `authoring-specs` skill) and **B, that unapproved
+  work stays out of the implementation** (solved by approval records and
+  collation). Satisfying one does not satisfy the other. Only the entry
+  condition goes into `AGENTS.md`; the formats and the question procedure live
+  in the skill and `docs/templates/`, because `AGENTS.md` is read every turn.
+
+  `spec-first.sh status` collates the hash in each approval record against the
+  spec file. Measured on the source repo: an untouched spec reports
+  `承認済み (<hash>) 仕様は承認時から変わっていない`, and adding a single line
+  flips it to `⚠ 承認後に仕様が変わっている` -- which is the whole point, so it
+  was checked rather than assumed.
+
+  Two things the pack deliberately does *not* claim. Requirement IDs pass by
+  being written, so `unlinked` catches a forgotten ID, never a fabricated one;
+  its output is labelled 要確認, not 未達, because config and generated files
+  legitimately have no requirement. And the reverse path (spec turns out wrong,
+  requirements change mid-implementation, a decision was never made) is
+  documented as a **normal route**, not an exception -- the failure mode in
+  practice is an agent quietly working around a spec it knows is wrong.
+
+- **`authoring-specs` skill** under `template/skills/`, with 4 evals. Two of
+  them cover under-blocking (treating 「いいね」 as approval; reading a
+  requirements approval as a design approval) and two cover the opposite
+  failure, which is just as real: silently patching around a spec contradicted
+  by measurement, and refusing to change a button colour because no approval
+  record exists. A procedure heavy enough to be abandoned protects nothing.
+
 ### Fixed
 
 - **`scripts/codex/discover.sh` swallowed adjacent claims when markers had no

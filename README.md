@@ -58,12 +58,13 @@ own tests (`tests/`), its README/CI, or `.git`. See
 ## Skills
 
 `AGENTS.md` is injected into context on every turn, so its size is a
-standing tax regardless of the task. Nine skills under `template/skills/`
+standing tax regardless of the task. Ten skills under `template/skills/`
 carry the procedures that are only needed at specific moments -- only their
 `name` and `description` sit in context until one is actually read.
 
 | Skill | For |
 |---|---|
+| `authoring-specs` | turning a rough idea into an approved spec before product code is written, and the reverse path when a spec turns out wrong |
 | `session-bootstrap` | starting, scoping, and closing a work session; declaring Goal/Scope/Stop Conditions |
 | `managing-memory` | deciding what goes in `memory/current-state.md` vs `decisions.md` vs `tasks.md`, and when to promote to `docs/` |
 | `recording-decisions` | writing a design decision so it stays reusable (alternatives considered, revision conditions) |
@@ -121,19 +122,22 @@ exclusion pattern that didn't match its own README description).
 
 | Profile | Packs applied |
 |---|---|
-| `minimal` | none |
-| `understand` | `understand-first` |
-| `research` | `understand-first`, `evidence-first` |
-| `strategy` | `evidence-first`, `problem-first` |
-| `full` | `understand-first`, `evidence-first`, `problem-first` |
-| `full-slides` | `understand-first`, `evidence-first`, `problem-first`, `slides` |
+| `minimal` | `spec-first` |
+| `understand` | `spec-first`, `understand-first` |
+| `research` | `spec-first`, `understand-first`, `evidence-first` |
+| `strategy` | `spec-first`, `evidence-first`, `problem-first` |
+| `full` | `spec-first`, `understand-first`, `evidence-first`, `problem-first` |
+| `full-slides` | `spec-first`, `understand-first`, `evidence-first`, `problem-first`, `slides` |
 
-`--packs pack1,pack2` selects packs directly instead of a profile.
+`spec-first` is in every profile: approving a spec is meant to be the start of
+any task, not an opt-in extra. `--packs pack1,pack2` selects packs directly
+instead of a profile, so it is also how you opt *out* of `spec-first`.
 
 ## Packs
 
 | Pack | Solves | Adds |
 |---|---|---|
+| `spec-first` | keep unapproved work out of the implementation | `docs/specs/`, `docs/approvals/`, `docs/templates/spec-lite.md`, `docs/templates/spec-full/`, `scripts/workflows/spec-first.sh` |
 | `understand-first` | understand existing code/specs before touching them | `memory/understanding-map.md`, `scripts/workflows/understand-first.sh` |
 | `evidence-first` | ground proposals and comparisons in evidence before opinions | `memory/evidence-log.md`, `docs/templates/evidence-card.md`, `scripts/workflows/evidence-first.sh` |
 | `problem-first` | define and decompose the problem before building | `memory/problem-map.md`, `docs/templates/PROBLEM-BRIEF.md`, `scripts/workflows/problem-framing.sh` |
