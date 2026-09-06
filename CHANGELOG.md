@@ -5,6 +5,47 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased] -- hardening pass (targeting 0.2.0)
 
+### Changed
+
+- **`spec-first` is one file now, not two forms.** The lite/full split is gone;
+  a spec is `docs/specs/<name>.md`, and a design doc is split out as
+  `<name>-design.md` only when one is actually needed. `tasks.md` is dropped.
+
+  Measured on the first real spec written with the pack (366 lines across four
+  files): the 44-line `tasks.md` restated the requirements and was filled in
+  retroactively in one pass. The one thing it should have caught -- a
+  requirement recorded as already-implemented that in fact was not -- it did
+  not; that surfaced while reading the data during implementation.
+
+  Two things replace the ceremony, and both are mechanical rather than
+  discretionary:
+
+  **State markers.** Every line carries `[確定]` / `[候補]` / `[未定]`, and a
+  line the agent wrote always starts at `[候補]`. The previous design expressed
+  the same rule as a prohibition ("the agent must not fabricate approval
+  state"). A structure beats a prohibition: there is no line for the agent to
+  write that silently reads as decided.
+
+  **A three-line status printed every turn** -- what is blank, what is still a
+  candidate, what is proceeding undecided. The previous design asked the agent
+  to show the stage; in a real multi-day session it did so only a few times. A
+  design that depends on the agent noticing fails on the turns it does not
+  notice.
+
+  Nothing on the drift-prevention side was relaxed: approval records, hash
+  collation, the typed change log (誤り / 変更 / 不足) and requirement IDs in
+  code all stay. Verified in a generated project: an untouched spec reports
+  `承認済み`, and one added line flips it to `⚠ 承認後に仕様が変わっている`.
+
+  Two rules earned their keep and are now stated in the template itself: a
+  requirement with no way to check it is not a requirement, and moving an open
+  question to §8 is the *normal* way to keep going rather than an exception --
+  a procedure heavy enough to be abandoned protects nothing.
+
+  `authoring-specs` shrinks from 218 to 71 lines; the operating rules live at
+  the end of the template, where they are read while the spec is being filled
+  in rather than loaded separately.
+
 ### Added
 
 - **`spec-first` pack, in every profile.** Approving a spec is meant to be the

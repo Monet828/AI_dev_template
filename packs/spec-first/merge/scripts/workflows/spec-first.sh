@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Spec-First Development
-# 正本: docs/specs/spec-driven-development/requirements.md
+# 雛形と運用ルール: docs/templates/spec.md
 # 対話手順: skills/authoring-specs/SKILL.md
 
 ROOT_DIR="$(pwd)"
@@ -14,10 +14,10 @@ usage() {
   cat <<'EOF'
 usage: spec-first.sh <command>
 
-  new-spec <name> [lite|full]  仕様の雛形を作る（既定 lite）
-  status                       仕様と承認の対応、ハッシュ照合
-  unlinked [base]              要件IDを持たない変更ファイルを列挙（REQ-B08）
-  check                        status + unlinked + 点検項目
+  new-spec <name>   仕様の雛形を作る（docs/specs/<name>.md）
+  status            仕様と承認の対応、ハッシュ照合
+  unlinked [base]   要件IDを持たない変更ファイルを列挙
+  check             status + unlinked + 点検項目
 EOF
 }
 
@@ -29,51 +29,55 @@ approval_hash() { # $1=name
 }
 
 cmd_new_spec() {
-  local name="${1:-}" form="${2:-lite}"
+  local name="${1:-}"
   [[ -z "$name" ]] && { usage; exit 1; }
-  local dest="$SPECS/$name"
+  # **名前を検証する。** しないと `new-spec --help` が `--help` という名前の
+  # 仕様を作る（実測でそうなった）。ファイル名になるので文字も絞る。
+  if ! [[ "$name" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]]; then
+    echo "仕様名は英数字で始まり、英数字・ハイフン・アンダースコアのみ: $name" >&2
+    exit 1
+  fi
+  mkdir -p "$SPECS" "$APPROVALS"
+  local dest="$SPECS/$name.md"
   [[ -e "$dest" ]] && { echo "既にある: $dest"; exit 1; }
-  mkdir -p "$dest" "$APPROVALS"
+  [[ -e "$SPECS/$name" ]] && { echo "既にある: $SPECS/$name"; exit 1; }
   local today; today="$(date '+%Y-%m-%d')"
 
-  case "$form" in
-    lite)
-      sed "s/YYYY-MM-DD/$today/; s|<対象>|$name|" \
-        "$TPL/spec-lite.md" > "$dest/spec.md"
-      echo "作った: $dest/spec.md（lite）"
-      ;;
-    full)
-      for f in requirements design tasks changes; do
-        sed "s/YYYY-MM-DD/$today/; s|<対象>|$name|" \
-          "$TPL/spec-full/$f.md" > "$dest/$f.md"
-      done
-      echo "作った: $dest/{requirements,design,tasks,changes}.md（full）"
-      ;;
-    *) echo "様式は lite か full"; exit 1 ;;
-  esac
+  sed "s/YYYY-MM-DD/$today/; s|<この仕様が扱うもの>|$name|; s|<name>|$name|g" \
+    "$TPL/spec.md" > "$dest"
+  echo "作った: $dest"
 
   sed "s|<仕様名>|$name|; s|<name>|$name|g" \
     "$APPROVALS/_TEMPLATE.md" > "$APPROVALS/$name.md"
   echo "作った: $APPROVALS/$name.md"
   echo
   echo "次にやること:"
-  echo "  1. 目的と、作らない範囲を書く"
-  echo "  2. 要件に ID を振り、**判定方法まで**受入条件を書く"
-  echo "  3. 未確定事項に「何が止まるか」を書く（止まらないものは着手してよい）"
-  echo "  4. コミットしてから承認を求める（ハッシュが要る）"
+  echo "  1. §1 と §2 を書く（作る理由が書けないなら、作らなくてよい）"
+  echo "  2. §3 に作らないものを書く。ここが空の仕様は膨張する"
+  echo "  3. 要件に確認方法を付ける。書けない要件は要件として成立していない"
+  echo "  4. 全行に [確定]/[候補]/[未定] を付ける"
+  echo "  5. コミットしてから承認を求める（ハッシュが要る）"
 }
 
 cmd_status() {
   echo "== 仕様と承認 =="
   local any=0
-  for d in "$SPECS"/*/; do
-    [[ -d "$d" ]] || continue
+  # 単一ファイル（docs/specs/<name>.md）と、旧いディレクトリ形式の両方を見る
+  local entries=()
+  for f in "$SPECS"/*.md; do [[ -f "$f" ]] && entries+=("$f"); done
+  for d in "$SPECS"/*/; do [[ -d "$d" ]] && entries+=("${d%/}"); done
+  for e in "${entries[@]:-}"; do
+    [[ -e "$e" ]] || continue
     any=1
-    local name; name="$(basename "$d")"
-    local spec=""
-    for cand in "${d%/}/spec.md" "${d%/}/requirements.md"; do
-      [[ -f "$cand" ]] && { spec="$cand"; break; }
-    done
+    local name spec=""
+    if [[ -f "$e" ]]; then
+      name="$(basename "$e" .md)"; spec="$e"
+    else
+      name="$(basename "$e")"
+      for cand in "$e/spec.md" "$e/requirements.md"; do
+        [[ -f "$cand" ]] && { spec="$cand"; break; }
+      done
+    fi
     local rel="${spec#"$ROOT_DIR"/}"
     printf "  %-34s %s\n" "$name" "${rel:-（仕様ファイル無し）}"
 
@@ -116,7 +120,7 @@ cmd_unlinked() {
     case "$f" in
       docs/*|memory/*|*.md|*.json|*.yml|*.yaml|*.lock|*.txt) continue ;;
     esac
-    if ! grep -qE 'REQ-[A-Za-z]*[0-9]+|§[0-9]+' "$ROOT_DIR/$f" 2>/dev/null; then
+    if ! grep -qE 'R-[0-9]+|REQ-[A-Za-z]*[0-9]+|§[0-9]+' "$ROOT_DIR/$f" 2>/dev/null; then
       echo "  要確認: $f"
       found=$((found + 1))
     fi
@@ -141,9 +145,10 @@ case "${1:-check}" in
 
 点検:
 - 承認記録にコミットハッシュがあるか
-- 受入条件に「判定方法」が書かれているか
-- 未確定事項に「何が止まるか」が書かれているか
-- 実装中に要件が変わったなら changes.md に記録したか（REQ-B07）
+- 全行に [確定]/[候補]/[未定] が付いているか
+- 要件に「確認方法」が書かれているか
+- §8 の未定に「止まる作業」が書かれているか
+- 実装中に要件が変わったなら、変更履歴に種別つきで記録したか
 EOF
     ;;
   -h|--help|help) usage ;;

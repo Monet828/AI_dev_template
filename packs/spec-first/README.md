@@ -11,7 +11,7 @@ scaffold 時に本体テンプレへマージされる。既定で全プロフ�
 
 | | 何を守るか | 手段 |
 |---|---|---|
-| **A 理解の担保** | ユーザーが理解していないものを土台にしない | `authoring-specs` Skill（対話） |
+| **A 理解の担保** | ユーザーが理解していないものを土台にしない | 対話と状態マーカー（`authoring-specs` Skill） |
 | **B 逸脱の防止** | 承認していないものを実装に混ぜない | 承認記録と適合検査 |
 
 具体的には、こういう失敗を止める。
@@ -40,7 +40,8 @@ scaffold 時に本体テンプレへマージされる。既定で全プロフ�
 - `pack-manifest.sh`
   - pack の基本情報と merge 元ディレクトリを定義する
 - `merge/`
-  - 新規プロジェクトへそのまま配置されるファイル
+  - 新規プロジェクトへそのまま配置されるファイル。
+    **雛形は `docs/templates/spec.md` の1つだけ**（運用ルールもその末尾にある）
 - `append/`
   - 既存ファイル末尾へ追記される断片（`AGENTS.md`）
 
@@ -55,12 +56,15 @@ scaffold 時に本体テンプレへマージされる。既定で全プロフ�
 
 ## 使い方
 
-1. `./scripts/workflows/spec-first.sh new-spec <name> [lite|full]` で雛形を出す
-2. 対話して埋める（`authoring-specs` Skill）
-3. コミットしてから承認を求める。ハッシュの無い承認記録は照合できない
-4. `docs/approvals/<name>.md` に承認を記録する（`_TEMPLATE.md` を使う）
-5. `./scripts/workflows/spec-first.sh status` で仕様と承認の対応を見る
-6. 実装とテストに要件IDを記す。`unlinked` が持たない変更ファイルを列挙する
+1. `./scripts/workflows/spec-first.sh new-spec <name>` で雛形を出す
+2. 対話して埋める。**全行に `[確定]` / `[候補]` / `[未定]` を付ける**
+   （AIが書いた行は必ず `[候補]` から始まる）
+3. 応答のたびに「空欄／候補のまま／未定で進行中」の3行が出る。
+   **気を利かせて指摘するのではなく、機械的に列挙する**
+4. コミットしてから承認を求める。ハッシュの無い承認記録は照合できない
+5. `docs/approvals/<name>.md` に承認を記録する（`_TEMPLATE.md` を使う）
+6. `./scripts/workflows/spec-first.sh status` で仕様と承認の対応を見る
+7. 実装とテストに要件IDを記す。`unlinked` が持たない変更ファイルを列挙する
 
 `status` は承認後に仕様が変わっていれば警告する。
 

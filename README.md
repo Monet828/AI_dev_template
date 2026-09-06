@@ -64,7 +64,7 @@ carry the procedures that are only needed at specific moments -- only their
 
 | Skill | For |
 |---|---|
-| `authoring-specs` | turning a rough idea into an approved spec before product code is written, and the reverse path when a spec turns out wrong |
+| `authoring-specs` | filling in a spec with the user before product code is written, and the reverse path when a spec turns out wrong |
 | `session-bootstrap` | starting, scoping, and closing a work session; declaring Goal/Scope/Stop Conditions |
 | `managing-memory` | deciding what goes in `memory/current-state.md` vs `decisions.md` vs `tasks.md`, and when to promote to `docs/` |
 | `recording-decisions` | writing a design decision so it stays reusable (alternatives considered, revision conditions) |
@@ -137,7 +137,7 @@ instead of a profile, so it is also how you opt *out* of `spec-first`.
 
 | Pack | Solves | Adds |
 |---|---|---|
-| `spec-first` | keep unapproved work out of the implementation | `docs/specs/`, `docs/approvals/`, `docs/templates/spec-lite.md`, `docs/templates/spec-full/`, `scripts/workflows/spec-first.sh` |
+| `spec-first` | keep unapproved work out of the implementation | `docs/specs/`, `docs/approvals/`, `docs/templates/spec.md`, `scripts/workflows/spec-first.sh` |
 | `understand-first` | understand existing code/specs before touching them | `memory/understanding-map.md`, `scripts/workflows/understand-first.sh` |
 | `evidence-first` | ground proposals and comparisons in evidence before opinions | `memory/evidence-log.md`, `docs/templates/evidence-card.md`, `scripts/workflows/evidence-first.sh` |
 | `problem-first` | define and decompose the problem before building | `memory/problem-map.md`, `docs/templates/PROBLEM-BRIEF.md`, `scripts/workflows/problem-framing.sh` |
