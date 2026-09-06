@@ -4,7 +4,7 @@
 # this manifest -- shellcheck can't see that cross-file usage.
 
 PACK_NAME="spec-first"
-PACK_VERSION="0.2.0"
+PACK_VERSION="0.3.0"
 PACK_DESCRIPTION="Approve a spec before writing product code"
 
 PACK_MERGE_DIR="merge"
