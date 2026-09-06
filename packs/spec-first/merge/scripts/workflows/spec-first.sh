@@ -31,6 +31,12 @@ approval_hash() { # $1=name
 cmd_new_spec() {
   local name="${1:-}"
   [[ -z "$name" ]] && { usage; exit 1; }
+  # **名前を検証する。** しないと `new-spec --help` が `--help` という名前の
+  # 仕様を作る（実測でそうなった）。ファイル名になるので文字も絞る。
+  if ! [[ "$name" =~ ^[A-Za-z0-9][A-Za-z0-9_-]*$ ]]; then
+    echo "仕様名は英数字で始まり、英数字・ハイフン・アンダースコアのみ: $name" >&2
+    exit 1
+  fi
   mkdir -p "$SPECS" "$APPROVALS"
   local dest="$SPECS/$name.md"
   [[ -e "$dest" ]] && { echo "既にある: $dest"; exit 1; }
